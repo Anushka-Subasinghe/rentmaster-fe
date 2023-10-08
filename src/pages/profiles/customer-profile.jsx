@@ -2,10 +2,38 @@ import React, {useEffect, useState} from 'react';
 import { Typography, Input, Button, Card, CardBody } from '@material-tailwind/react';
 import config from "@/config";
 
+const getCurrentLocation = () => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const coords = position.coords;
+          const latitude = coords.latitude;
+          const longitude = coords.longitude;
+          resolve({ latitude, longitude });
+        },
+        error => {
+          reject(error);
+        }
+      );
+    });
+  };
+
 const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
     const [jobType, setJobType] = useState('');
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
+    const [location, setLocation] = useState([0, 0]);
+
+    useEffect(() => {
+        getCurrentLocation()
+  .then(location => {
+    console.log(location.latitude, location.longitude);
+    setLocation([location.latitude, location.longitude]);
+  })
+  .catch(error => {
+    console.error('Error getting location:', error);
+  });
+      }, []);
 
     const baseUrl = config.API_BASE_URL;  
 
@@ -34,7 +62,6 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
     };
 
 
-
       const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -49,7 +76,9 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
             date: date,
             time: time,
             job_type: jobType,
-            status: "Active"
+            status: "Active",
+            latitude: location[0],
+            longitude: location[1]
           }),
         })
           .then(response => response.json())
@@ -111,21 +140,36 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
 const CustomerDashboard = ({ userDetails }) => {
   const [advertisements, setAdvertisements] = useState([]);
 
+  const [previousAdvertisements, setPreviousAdvertisements] = useState([]);
+
+  const isEqual = (arr1, arr2) => JSON.stringify(arr1) === JSON.stringify(arr2);
+
   const fetchAdvertisements = async () => {
     try {
       const encodedEmail = encodeURIComponent(userDetails.email);
       const response = await fetch(`${config.API_BASE_URL}/advertisement/customer/${encodedEmail}`);
       const data = await response.json();
-      console.log(data);
-      setAdvertisements(JSON.parse(data).advertisements);
+      const newAdvertisements = JSON.parse(data).advertisements;
+
+      if (!isEqual(newAdvertisements, previousAdvertisements)) {
+        setAdvertisements(newAdvertisements);
+        setPreviousAdvertisements(newAdvertisements);
+      }
     } catch (error) {
       console.error('Error fetching advertisements:', error);
     }
-  };  
+  };
 
   useEffect(() => {
+    // Fetch advertisements initially
     fetchAdvertisements();
-  }, [userDetails.email]);
+
+    // Poll for updates every 10 seconds (adjust as needed)
+    const intervalId = setInterval(fetchAdvertisements, 5000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleDeleteAdvertisement = async (advertisementId) => {
     try {
@@ -141,29 +185,63 @@ const CustomerDashboard = ({ userDetails }) => {
     <div>
       <div>
         <Typography variant="h3" color="blue-gray" className="mb-2">
-          Your Advertisements:
+          Active Advertisements:
         </Typography>
-
+  
         {advertisements.length === 0 ? (
           <Typography variant="paragraph" color="blue-gray">
-            No advertisements to display.
+            No active advertisements to display.
           </Typography>
         ) : (
           <ul>
-            {advertisements.map((advertisement, index) => (
-                <Card key={index} color="gray" className="mb-4" style={{marginTop: "20px"}}>
-                    <CardBody>
-                        <div className="flex justify-between mb-2">
-                            <span>Job Type: {advertisement.job_type}</span>
-                            <span>Date: {advertisement.date}</span>
-                            <span>Time: {advertisement.time}</span>
-                            <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
-                                Delete
-                            </Button>
-                        </div>
-                    </CardBody>
+            {advertisements
+              .filter((advertisement) => advertisement.status === "Active")
+              .map((advertisement, index) => (
+                <Card key={index} color="gray" className="mb-4" style={{ marginTop: "20px" }}>
+                  <CardBody>
+                    <div className="flex justify-between mb-2">
+                      <span>Job Type: {advertisement.job_type}</span>
+                      <span>Date: {advertisement.date}</span>
+                      <span>Time: {advertisement.time}</span>
+                      <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </CardBody>
                 </Card>
-            ))}
+              ))}
+          </ul>
+        )}
+      </div>
+  
+      <div>
+        <Typography variant="h3" color="blue-gray" className="mb-2">
+          Accepted Advertisements:
+        </Typography>
+  
+        {advertisements.length === 0 ? (
+          <Typography variant="paragraph" color="blue-gray">
+            No accepted advertisements to display.
+          </Typography>
+        ) : (
+          <ul>
+            {advertisements
+              .filter((advertisement) => advertisement.status === "Accepted")
+              .map((advertisement, index) => (
+                <Card key={index} color="gray" className="mb-4" style={{ marginTop: "20px" }}>
+                  <CardBody>
+                    <div className="flex justify-between mb-2">
+                    <span>Worker: {advertisement.worker_name}</span>  
+                      <span>Job Type: {advertisement.job_type}</span>
+                      <span>Date: {advertisement.date}</span>
+                      <span>Time: {advertisement.time}</span>
+                      <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
           </ul>
         )}
       </div>

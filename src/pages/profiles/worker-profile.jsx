@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Card, CardBody } from "@material-tailwind/react";
+import { Typography, Card, CardBody, Button } from "@material-tailwind/react";
 import config from "@/config";
+
+const getCurrentLocation = () => {
+    let latitude = 0;
+    let longitude = 0;
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const coords = position.coords;
+            latitude = coords.latitude;
+            longitude = coords.longitude;
+        },
+        error => {
+            reject(error);
+        }
+    );
+    return { latitude, longitude };
+  };
 
 function WorkerProfilePage({ userDetails }) {
   const [jobs, setJobs] = useState([]);
@@ -42,27 +58,60 @@ function WorkerProfilePage({ userDetails }) {
     fetchJobs();
 
     // Poll for updates every 10 seconds (adjust as needed)
-    const intervalId = setInterval(fetchJobs, 10000);
+    const intervalId = setInterval(fetchJobs, 5000);
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, [userDetails, workerJobTypes]);
 
   const renderJobs = (status) => {
+    const handleJob = async (jobId, isAccept) => {
+      try {
+        // Send a request to update the job status to "Accepted"
+        const response = await fetch(`${config.API_BASE_URL}/advertisement`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: jobId,
+            status: isAccept ? 'Accepted' : 'Active',
+            worker_name: isAccept ? userDetails.name : '',
+            worker_id: isAccept ? userDetails.id : ''
+          }),
+        });
+  
+        if (response.ok) {
+          fetchJobs();
+        } else {
+          console.error('Failed to accept job');
+        }
+      } catch (error) {
+        console.error('Error accepting job:', error);
+      }
+    };
+  
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
       .map((job, index) => (
         <li key={index}>
-            <Card color="gray" className="mb-4" style={{marginTop: "20px", width: "1000px"}}>
-                <CardBody>
-                <div className="flex justify-between mb-2">
-                    <span>Job Type: {job.job_type}</span>
-                    <span>Date: {job.date}</span>
-                    <span>Time: {job.time}</span>
-                    <span>Customer: {job.customer_name}</span>
-                 </div>
-                </CardBody>
-            </Card>
+          <Card color="gray" className="mb-4" style={{ marginTop: '20px', width: '1000px' }}>
+            <CardBody>
+              <div className="flex justify-between mb-2">
+                <span>Job Type: {job.job_type}</span>
+                <span>Date: {job.date}</span>
+                <span>Time: {job.time}</span>
+                <span>Customer: {job.customer_name}</span>
+                {status === 'Active' ? (
+                  <Button color="blue" onClick={() => handleJob(job._id, true)}>
+                    Accept Job
+                  </Button>
+                ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
+                Cancel Job
+              </Button>}
+              </div>
+            </CardBody>
+          </Card>
         </li>
       ));
   };
