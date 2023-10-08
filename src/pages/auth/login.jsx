@@ -11,26 +11,46 @@ import {
   Typography,
   IconButton,
 } from "@material-tailwind/react";
-import { SimpleFooter } from "@/widgets/layout";
+import {Navbar, SimpleFooter} from "@/widgets/layout";
 import { appRoutes, userData } from "@/data";
+import config from "@/config";
+import { toast } from "react-toastify";
+import routes from "@/routes.jsx";
 
 export function Login() {
   const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isCustomer, setIsCustomer] = useState(true);
+  const baseUrl = config.API_BASE_URL;
 
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    sessionStorage.setItem("isLogged", true);
-    sessionStorage.setItem("userData", JSON.stringify(userData));
-    if (isCustomer) {
-      sessionStorage.setItem('isCustomer', true);
-      setIsCustomer(true);
-      navigate(appRoutes.secureRouts.appType);
-    } else {
-      sessionStorage.setItem('isCustomer', false);
-      setIsCustomer(false);
-      navigate(appRoutes.secureRouts.serviceProvider);
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/user/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const userDetails = await response.json();
+        localStorage.setItem("isLogged", JSON.stringify(true));
+        localStorage.setItem("isCustomer", JSON.stringify(true));
+        localStorage.setItem("userDetails", JSON.stringify(userDetails));
+        navigate(appRoutes.secureRouts.myProfile, { state: { userDetails } });
+      } else {
+        // Handle error response (e.g., incorrect credentials)
+        const errorResponse = await response.json();
+        console.log(errorResponse);
+        toast.error(errorResponse.detail);
+      }
+    } catch (error) {
+      toast.error("An error occurred while logging in. Please try again later.");
+      console.log("Error logging in:", error);
     }
   };
 
@@ -51,73 +71,35 @@ export function Login() {
           </CardHeader>
 
           <CardBody className="flex flex-col gap-4">
-            <Input variant="standard" type="email" label="Email" size="lg" />
             <Input
-              variant="standard"
-              type="password"
-              label="Password"
-              size="lg"
-              icon={
-                showPw ? (
-                  <i className="fas fa-eye" onClick={() => setShowPw(false)} />
-                ) : (
-                  <i
-                    className="fas fa-eye-slash"
-                    onClick={() => setShowPw(true)}
-                  />
-                )
-              }
+                variant="standard"
+                type="email"
+                label="Email"
+                size="lg"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
             />
-            <div className="-ml-2.5">
-              <Checkbox label="Remember Me" />
-            </div>
+            <Input
+                variant="standard"
+                type="password"
+                label="Password"
+                size="lg"
+                icon={
+                  showPw ? (
+                      <i className="fas fa-eye" onClick={() => setShowPw(false)} />
+                  ) : (
+                      <i className="fas fa-eye-slash" onClick={() => setShowPw(true)} />
+                  )
+                }
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
           </CardBody>
 
           <CardFooter className="pt-0">
             <Button variant="gradient" fullWidth onClick={handleLogin} size="lg">
               Login
             </Button>
-            <Typography variant="small" className="mt-1 flex justify-center">
-              I forgot my password :(
-              <Link to={appRoutes.authRouts.signUp}>
-                <Typography
-                  as="span"
-                  variant="small"
-                  color="blue"
-                  className="ml-1 font-bold"
-                >
-                  Reset password
-                </Typography>
-              </Link>
-            </Typography>
-
-            <Typography variant="small" className="mt-3 flex justify-center">
-              or Sign In with
-            </Typography>
-            <div className="mt-2 flex justify-center gap-3">
-              <Button
-                size="sm"
-                variant="outlined"
-                color="blue-gray"
-                className="flex items-center gap-3"
-              >
-                <i className="fa-brands fa-google" style={{ color: "red" }} />
-                Google
-              </Button>
-              <Button
-                size="sm"
-                variant="outlined"
-                color="blue-gray"
-                className="flex items-center gap-3"
-              >
-                <i
-                  className="fa-brands fa-facebook"
-                  style={{ color: "blue" }}
-                />
-                Facebook
-              </Button>
-            </div>
-
             <Typography variant="small" className="mt-2 flex justify-center">
               Don't have an account?
               <Link to={appRoutes.authRouts.signUp}>

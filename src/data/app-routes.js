@@ -19,13 +19,17 @@ export const appRoutes = {
       serviceProvider: "/service-provider",
       demandArea: "/demand-area",
       wheather: "/wheather",
-    },
-    profileRouts: {
       myProfile: "/profile",
       editProfile: "/edit-profile",
       inbox: "/inbox",
       logout: "/home",
     },
+    // profileRouts: {
+    //   myProfile: "/profile",
+    //   editProfile: "/edit-profile",
+    //   inbox: "/inbox",
+    //   logout: "/home",
+    // },
     viewProfileRouts: {
       serviceProviderView: "/service-provider-profile",
     },

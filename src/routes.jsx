@@ -130,7 +130,7 @@ export const profileRouts = [
   {
     icon: ArrowRightOnRectangleIcon,
     name: "My Profile",
-    path: appRoutes.profileRouts.myProfile,
+    path: appRoutes.secureRouts.myProfile,
     element: <Profile />,
   },
   {

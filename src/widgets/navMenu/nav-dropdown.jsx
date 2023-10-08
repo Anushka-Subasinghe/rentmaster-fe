@@ -16,12 +16,12 @@ export function NavDropdown({ children, childernClass, menu }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigate = useNavigate();
-  const userData = JSON.parse(sessionStorage.getItem("userData"));
+  const userData = JSON.parse(localStorage.getItem("userData"));
 
   const handleClick = (url) => {
     setIsMenuOpen(false);
-    if (url === appRoutes.profileRouts.logout) {
-      sessionStorage.setItem("isLogged", false);
+    if (url === appRoutes.secureRouts.logout) {
+      localStorage.setItem("isLogged", false);
       navigate(url);
     } else {
       navigate({
@@ -58,7 +58,7 @@ export function NavDropdown({ children, childernClass, menu }) {
                 key={label}
                 onClick={() => handleClick(url)}
                 className={`flex items-center gap-2 rounded ${
-                  url === appRoutes.profileRouts.logout
+                  url === appRoutes.secureRouts.logout
                     ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
                     : ""
                 }`}
@@ -74,7 +74,7 @@ export function NavDropdown({ children, childernClass, menu }) {
                   variant="small"
                   className="font-normal"
                   color={
-                    url === appRoutes.profileRouts.logout ? "red" : "inherit"
+                    url === appRoutes.secureRouts.logout ? "red" : "inherit"
                   }
                 >
                   {label}

@@ -19,13 +19,13 @@ export function SignUp({ type }) {
   const navigate = useNavigate();
 
   const handleSignUp = () => {
-    sessionStorage.setItem("isLogged", true);
-    sessionStorage.setItem("userData", JSON.stringify(userData));
+    localStorage.setItem("isLogged", true);
+    localStorage.setItem("userData", JSON.stringify(userData));
     if (type === userType.customer) {
-      sessionStorage.setItem("isCustomer", true);
+      localStorage.setItem("isCustomer", true);
       navigate(appRoutes.secureRouts.appType);
     } else {
-      sessionStorage.setItem("isCustomer", false);
+      localStorage.setItem("isCustomer", false);
       navigate(appRoutes.secureRouts.serviceProvider);
     }
   };

@@ -29,7 +29,7 @@ export const DemandArea = () => {
         <div>No any demand area data for now</div>
       )}
 
-      <Footer />
+      
     </>
   );
 };

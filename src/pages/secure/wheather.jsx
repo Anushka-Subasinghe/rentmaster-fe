@@ -9,10 +9,10 @@ import {
 
 export const Wheather = () => {
   const { data, isLoading, errorMessage } = useWeatherBit({
-    // key: "ffc674d86981459692aeb0b5d54f6447", // 21 days from 2023/05/21 - 500 calls per day
-    key: "955586ab534a4e05af95f341c340bfe5", // 50 calls per day
-    lat: "48.137154",
-    lon: "11.576124",
+    key: "ffc674d86981459692aeb0b5d54f6447", // 21 days from 2023/05/21 - 500 calls per day
+    //  key: "955586ab534a4e05af95f341c340bfe5", // 50 calls per day
+    lat: "6.906909",
+    lon: "70.970014",
     lang: "en",
     unit: "M", // values are (M,S,I)
   });
@@ -24,11 +24,10 @@ export const Wheather = () => {
       >
         <div className="absolute inset-0 z-0 h-full w-full" />
       </div>
+      
       <section
-        className="flex min-h-[60vh] items-center justify-center px-4 pb-20 pt-20"
-        style={{ background: "blue" }}
+        className="flex min-h-[60vh] items-center justify-center px-4 pb-20 pt-20 bg-black/50"
       >
-        <div className="absolute inset-0 z-0 h-full w-full bg-black/75" />
         {isLoading && (
           <Alert
             variant="gradient"
@@ -61,7 +60,7 @@ export const Wheather = () => {
           </Alert>
         )}
       </section>
-      <Footer />
+      
     </>
   );
 };

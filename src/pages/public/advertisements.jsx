@@ -17,7 +17,7 @@ export const Advertisements = () => {
         </div>
         <AddContainer />
       </section>
-      <Footer />
+      
       <Fragment>
         <AddApplication open={open} handleOpen={handleOpen} />
       </Fragment>

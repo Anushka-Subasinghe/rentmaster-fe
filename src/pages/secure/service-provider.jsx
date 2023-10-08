@@ -96,7 +96,7 @@ export const ServiceProviderPage = () => {
         </section>
       )}
 
-      <Footer />
+      
 
       <Fragment>
         <JobApplication

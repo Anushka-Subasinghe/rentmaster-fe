@@ -1,11 +1,12 @@
 import React from "react";
 import { Card, Typography, Button } from "@material-tailwind/react";
 import { UsersIcon } from "@heroicons/react/24/solid";
-import { AddContainer, Footer } from "@/widgets/layout";
+import {AddContainer, Footer, Navbar} from "@/widgets/layout";
 import { FeatureCard } from "@/widgets/cards";
 import { featuresData } from "@/data";
 import man1 from "../../assets/man1.png";
 import man2 from "../../assets/man2.png";
+import routes from "@/routes.jsx";
 
 export function Home() {
   return (
@@ -14,7 +15,7 @@ export function Home() {
         className="relative flex h-screen content-center items-center justify-center pb-32 pt-16"
         style={{ height: "85vh", background: "blue" }}
       >
-        {/* <div className="absolute top-0 h-full w-full bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80')] bg-cover bg-center" /> */}
+         <div className="absolute top-0 h-full w-full bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80')] bg-cover bg-center" />
         <div className="absolute top-0 h-full w-full bg-black/75 bg-cover bg-center" />
         <div className="max-w-8xl container relative mx-auto">
           <div className="relative flex flex-wrap items-center gap-10">
@@ -108,7 +109,7 @@ export function Home() {
         <AddContainer />
       </section>
 
-      <Footer />
+      
     </>
   );
 }

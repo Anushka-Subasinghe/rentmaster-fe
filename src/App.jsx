@@ -2,16 +2,17 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "@/widgets/layout";
 import routes, { authRouts, secureRouts, profileRouts } from "@/routes";
 import { appRoutes } from "./data";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import React from "react";
 
 function App() {
-  sessionStorage.setItem('isLogged', false);
-  sessionStorage.setItem('isCustomer', true);
-  sessionStorage.setItem("userData", JSON.stringify({}));
 
   return (
     <>
-      <div className="container absolute left-2/4 z-10 mx-auto -translate-x-2/4 p-4">
+      <div style={{ paddingTop: '80px' }}>
         <Navbar routes={routes} />
+        <ToastContainer position="top-center" autoClose={5000} />
       </div>
       <Routes>
         {authRouts.map(

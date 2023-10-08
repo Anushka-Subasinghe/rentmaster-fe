@@ -13,22 +13,22 @@ const profileMenuItems = [
   {
     label: "My Profile",
     icon: UserCircleIcon,
-    url: appRoutes.profileRouts.myProfile,
+    url: appRoutes.secureRouts.myProfile,
   },
   {
     label: "Edit Profile",
     icon: Cog6ToothIcon,
-    url: appRoutes.profileRouts.editProfile,
+    url: appRoutes.secureRouts.editProfile,
   },
   {
     label: "Inbox",
     icon: InboxArrowDownIcon,
-    url: appRoutes.profileRouts.inbox,
+    url: appRoutes.secureRouts.inbox,
   },
   {
     label: "Log Out",
     icon: PowerIcon,
-    url: appRoutes.profileRouts.logout,
+    url: appRoutes.secureRouts.logout,
   },
 ];
 

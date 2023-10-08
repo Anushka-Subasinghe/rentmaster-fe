@@ -29,7 +29,7 @@ export const BookServiceProvider = ({
   handleOpen,
   serviceProviderData,
 }) => {
-  const userData = JSON.parse(sessionStorage.getItem("userData"));
+  const userData = JSON.parse(localStorage.getItem("userData"));
 
   const [customerName, setcustomerName] = useState(
     userData ? userData.name : ""
