@@ -9,6 +9,7 @@ import {
 import {Footer, Navbar} from "@/widgets/layout";
 import CustomerProfilePage from "@/pages/profiles/customer-profile";
 import routes from "@/routes.jsx";
+import WorkerProfilePage from "./worker-profile";
 
 export function Profile() {
   const location = useLocation();
@@ -25,11 +26,7 @@ export function Profile() {
   const renderWorkerProfile = () => {
     return (
         <div>
-          <Typography variant="h2" color="blue-gray" className="mb-2">
-            {userDetails.name}
-          </Typography>
-          {/* Display active jobs related to worker's job types */}
-          {/* Add a real-time update mechanism for new job notifications */}
+          <WorkerProfilePage userDetails={userDetails} />
         </div>
     );
   };
