@@ -20,12 +20,31 @@ const getCurrentLocation = () => {
 
 function WorkerProfilePage({ userDetails }) {
   const [jobs, setJobs] = useState([]);
+  const [workerLocation, setWorkerLocation] = useState(null);
+
+    useEffect(() => {
+        getCurrentLocation()
+  .then(location => {
+    console.log(location.latitude, location.longitude);
+    setWorkerLocation({latitude, longitude});
+  })
+  .catch(error => {
+    console.error('Error getting location:', error);
+  });
+      }, []);
 
   const workerJobTypes = userDetails.job_types || [];
 
   function isEqual(arr1, arr2) {
     return JSON.stringify(arr1) === JSON.stringify(arr2);
   }  
+
+  const calculateProximity = (jobLocation) => {
+    // Simple Euclidean distance formula for proximity using latitude and longitude
+    const dx = workerLocation.latitude - jobLocation.latitude;
+    const dy = workerLocation.longitude - jobLocation.longitude;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
 
   const fetchJobs = async () => {
     try {
@@ -42,9 +61,15 @@ function WorkerProfilePage({ userDetails }) {
       if (response.ok) {
         const data = await response.json();
         const adds = JSON.parse(data).advertisements;
-        if (!isEqual(adds, jobs)) {
-            setJobs(adds);
-          } 
+
+        // Calculate proximity and sort jobs by proximity
+        const jobsWithProximity = adds.map(job => ({
+          ...job,
+          proximity: calculateProximity(workerLocation, { latitude: job.latitude, longitude: job.longitude }),
+        }));
+        jobsWithProximity.sort((a, b) => a.proximity - b.proximity);
+
+        setJobs(jobsWithProximity);
       } else {
         console.error("Failed to fetch ads");
       }
