@@ -3,30 +3,30 @@ import { Typography, Card, CardBody, Button } from "@material-tailwind/react";
 import config from "@/config";
 
 const getCurrentLocation = () => {
-    let latitude = 0;
-    let longitude = 0;
+  return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
-        position => {
-            const coords = position.coords;
-            latitude = coords.latitude;
-            longitude = coords.longitude;
-        },
-        error => {
-            reject(error);
-        }
+      position => {
+        const coords = position.coords;
+        const latitude = coords.latitude;
+        const longitude = coords.longitude;
+        resolve({ latitude, longitude });
+      },
+      error => {
+        reject(error);
+      }
     );
-    return { latitude, longitude };
-  };
+  });
+};
 
 function WorkerProfilePage({ userDetails }) {
   const [jobs, setJobs] = useState([]);
-  const [workerLocation, setWorkerLocation] = useState(null);
+  const [workerLocation, setWorkerLocation] = useState({latitude: 0, longitude: 0});
 
     useEffect(() => {
         getCurrentLocation()
   .then(location => {
     console.log(location.latitude, location.longitude);
-    setWorkerLocation({latitude, longitude});
+    setWorkerLocation({latitude: location.latitude, longitude: location.latitude});
   })
   .catch(error => {
     console.error('Error getting location:', error);
@@ -61,11 +61,11 @@ function WorkerProfilePage({ userDetails }) {
       if (response.ok) {
         const data = await response.json();
         const adds = JSON.parse(data).advertisements;
-
+        console.log(adds);
         // Calculate proximity and sort jobs by proximity
         const jobsWithProximity = adds.map(job => ({
           ...job,
-          proximity: calculateProximity(workerLocation, { latitude: job.latitude, longitude: job.longitude }),
+          proximity: calculateProximity({ latitude: job.latitude, longitude: job.longitude }),
         }));
         jobsWithProximity.sort((a, b) => a.proximity - b.proximity);
 
@@ -118,28 +118,31 @@ function WorkerProfilePage({ userDetails }) {
   
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
-      .map((job, index) => (
-        <li key={index}>
-          <Card color="gray" className="mb-4" style={{ marginTop: '20px', width: '1000px' }}>
-            <CardBody>
-              <div className="flex justify-between mb-2">
-                <span>Job Type: {job.job_type}</span>
-                <span>Date: {job.date}</span>
-                <span>Time: {job.time}</span>
-                <span>Customer: {job.customer_name}</span>
-                {status === 'Active' ? (
-                  <Button color="blue" onClick={() => handleJob(job._id, true)}>
-                    Accept Job
-                  </Button>
-                ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
-                Cancel Job
-              </Button>}
-              </div>
-            </CardBody>
-          </Card>
-        </li>
-      ));
-  };
+      .map((job, index) => {
+        return (
+          <li key={index}>
+            <Card color="gray" className="mb-4" style={{ marginTop: '20px', width: '1000px' }}>
+              <CardBody>
+                <div className="flex justify-between mb-2">
+                  <span>Job Type: {job.job_type}</span>
+                  <span>Date: {job.date}</span>
+                  <span>Time: {job.time}</span>
+                  <span>Customer: {job.customer_name}</span>
+                  <span>Weather Forecast: {job.weather}</span>
+                  {status === 'Active' ? (
+                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
+                      Accept Job
+                    </Button>
+                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
+                  Cancel Job
+                </Button>}
+                </div>
+              </CardBody>
+            </Card>
+          </li>
+        );
+      });
+    };
 
   return (
     <div style={{ marginLeft: "10%", marginTop: "100px" }}>

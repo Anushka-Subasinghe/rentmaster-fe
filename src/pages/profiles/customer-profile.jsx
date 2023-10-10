@@ -18,6 +18,29 @@ const getCurrentLocation = () => {
     });
   };
 
+  
+  const displayWeatherForecast = async (jobDate) => {
+    const { latitude, longitude } = workerLocation;
+    const apiKey = "9f255ee07784e1584b4f0bbc464922ed";
+    const apiUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=current,minutely,hourly,alerts&appid=${apiKey}`;
+    
+    try {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const data = await response.json();
+        // Assuming the jobDate is in YYYY-MM-DD format
+        const jobForecast = data.daily.find(item => item.dt === new Date(jobDate).getTime() / 1000);
+        return jobForecast;
+      } else {
+        console.error("Failed to fetch weather forecast");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching weather forecast:", error);
+      return null;
+    }
+  };
+
 const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
     const [jobType, setJobType] = useState('');
     const [date, setDate] = useState('');
