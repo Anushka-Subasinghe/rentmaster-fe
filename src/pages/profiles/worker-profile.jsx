@@ -128,7 +128,7 @@ function WorkerProfilePage({ userDetails }) {
                   <span>Date: {job.date}</span>
                   <span>Time: {job.time}</span>
                   <span>Customer: {job.customer_name}</span>
-                  <span>Weather Forecast: {job.weather}</span>
+                  <span>Weather Forecast: {job.forecast}</span>
                   {status === 'Active' ? (
                     <Button color="blue" onClick={() => handleJob(job._id, true)}>
                       Accept Job
