@@ -11,22 +11,37 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import { SimpleFooter } from "@/widgets/layout";
-import { appRoutes, userData, userType } from "@/data";
+import { appRoutes, userType } from "@/data";
 
 export function SignUp({ type }) {
   const [showPw, setShowPw] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSignUp = () => {
-    localStorage.setItem("isLogged", true);
-    localStorage.setItem("userData", JSON.stringify(userData));
-    if (type === userType.customer) {
-      localStorage.setItem("isCustomer", true);
-      navigate(appRoutes.secureRouts.appType);
-    } else {
-      localStorage.setItem("isCustomer", false);
-      navigate(appRoutes.secureRouts.serviceProvider);
+  const handleSignUp = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/user/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const userDetails = await response.json();
+        localStorage.setItem("isLogged", JSON.stringify(true));
+        localStorage.setItem("userDetails", JSON.stringify(userDetails));
+        navigate(appRoutes.secureRouts.myProfile, { state: { userDetails } });
+      } else {
+        // Handle error response (e.g., incorrect credentials)
+        const errorResponse = await response.json();
+        console.log(errorResponse);
+        toast.error(errorResponse.detail);
+      }
+    } catch (error) {
+      toast.error("An error occurred while signing up. Please try again later.");
+      console.log("Error signing up:", error);
     }
   };
 

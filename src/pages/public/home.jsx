@@ -1,117 +1,65 @@
 import React from "react";
-import { Card, Typography, Button } from "@material-tailwind/react";
-import { UsersIcon } from "@heroicons/react/24/solid";
-import {AddContainer, Footer, Navbar} from "@/widgets/layout";
-import { FeatureCard } from "@/widgets/cards";
-import { featuresData } from "@/data";
-import man1 from "../../assets/man1.png";
-import man2 from "../../assets/man2.png";
-import routes from "@/routes.jsx";
+import { Link } from "react-router-dom";
+import background from "../../assets/header.png";
+import construction from "../../assets/construction.jpg";
+import { appRoutes } from "@/data";
 
-export function Home() {
+export function Home () {
   return (
-    <>
-      <div
-        className="relative flex h-screen content-center items-center justify-center pb-32 pt-16"
-        style={{ height: "85vh", background: "blue" }}
-      >
-         <div className="absolute top-0 h-full w-full bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80')] bg-cover bg-center" />
-        <div className="absolute top-0 h-full w-full bg-black/75 bg-cover bg-center" />
-        <div className="max-w-8xl container relative mx-auto">
-          <div className="relative flex flex-wrap items-center gap-10">
-            <img alt="Card Image" src={man2} className="" />
-            <div className="w-full px-4 text-left lg:w-8/12">
-              <div className="flex gap-3 items-end">
-                <Typography
-                  variant="h2"
-                  color="blue"
-                  className="mb-6 font-black font-normal"
-                >
-                  Looking for a reliable rental worker?
-                </Typography>
-                <Typography
-                  variant="h5"
-                  color="gray"
-                  className="mb-6 font-black"
-                >
-                  Find one!
-                </Typography>
-              </div>
-
-              <Typography
-                variant="h3"
-                color="orange"
-                className="mb-6 font-black"
-              >
-                Select a rental worker near you and get a best service
-              </Typography>
-              
-              <Typography
-                variant="h4"
-                color="green"
-                className="mb-6 font-black"
-              >
-                Looking for a reliable rental job? There is no better place to
-                start.
-              </Typography>
+    <html style={{height: '100vh', // Adjusted to use viewport height
+    overflow: 'auto', margin: 0,
+    background: `url(${background})`,
+    backgroundSize: 'cover'}} lang="en">
+      <body className="leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed">
+        <div className="h-full">
+          <div className="w-full container mx-auto">
+            <div className="w-full flex items-center justify-between">
+              <Link className="flex items-center text-indigo-400 no-underline hover:no-underline font-bold text-2xl lg:text-4xl" to="#" style={{marginTop: "10px"}}>
+                Rent<span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">Master</span>
+              </Link>
             </div>
+          </div>
+
+          <div className="container pt-24 md:pt-36 mx-auto flex flex-wrap flex-col md:flex-row items-center">
+            <div className="flex flex-col w-full xl:w-2/5 justify-center lg:items-start overflow-y-hidden">
+              <h1 className="my-4 text-3xl md:text-5xl text-white opacity-75 font-bold leading-tight text-center md:text-left">
+                Reliable
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 via-pink-500 to-purple-500">
+                &nbsp;Rental Workers
+                </span>
+                &nbsp;at the right price
+              </h1>
+              <p className="leading-normal text-base md:text-2xl mb-8 text-center md:text-left">
+                Sign up now if you want the best workers or if you are one
+              </p>
+                <div className="flex items-center justify-between pt-4"   style={{marginBottom: "300px"}}>
+                  <Link to={appRoutes.authRouts.signUp}>
+                    <button
+                      className="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                      type="button"
+                    >
+                      Sign Up
+                    </button>
+                  </Link>  
+                  <Link to={appRoutes.authRouts.login}>
+                    <button style={{marginLeft: "20px"}}
+                      className="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                      type="button"
+                    >
+                      Login
+                    </button>
+                  </Link>
+                </div>
+            </div>
+
+            <div className="w-full xl:w-3/5 p-12 overflow-hidden">
+              <img className="mx-auto w-full md:w-4/5 transform -rotate-6 transition hover:scale-105 duration-700 ease-in-out hover:rotate-6" src={construction} />
+            </div>
+
+            
           </div>
         </div>
-      </div>
-
-      <section
-        className="bg-gray-50 px-4 pb-20 pt-4"
-        style={{ marginTop: "-6rem" }}
-      >
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {featuresData.map(({ color, title, icon, description }) => (
-              <FeatureCard
-                key={title}
-                color={color}
-                title={title}
-                icon={React.createElement(icon, {
-                  className: "w-5 h-5 text-white",
-                })}
-                description={description}
-              />
-            ))}
-          </div>
-          <div className="mt-32 flex flex-wrap items-center">
-            <div className="mx-auto -mt-8 w-full px-4 md:w-5/12">
-              <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-black/20 p-4 text-center shadow-lg">
-                <UsersIcon className="h-10 w-10" color="blue"/>
-              </div>
-              <Typography
-                variant="h3"
-                className="mb-3 font-bold"
-                color="blue-gray"
-              >
-                Sign up now and increase your chance of winning..!
-              </Typography>
-              <Typography className="mb-8 font-normal text-blue-gray-500">
-                Don't let miss this chance to archive your dreams fast.
-                <br />
-                Sign up now and increase your chance of winning
-              </Typography>
-              <Button>Sign Up Free</Button>
-            </div>
-            <div className="mx-auto mt-24 flex w-full justify-center px-4 md:w-4/12 lg:mt-0">
-              <Card className="shadow-none">
-                <img alt="Card Image" src={man1} className="h-full w-full" />
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 pb-20 pt-20">
-        <AddContainer />
-      </section>
-
-      
-    </>
+      </body>
+    </html>
   );
-}
-
-export default Home;
+};

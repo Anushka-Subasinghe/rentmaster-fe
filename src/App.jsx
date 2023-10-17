@@ -10,10 +10,10 @@ function App() {
 
   return (
     <>
-      <div style={{ paddingTop: '80px' }}>
+      {/* <div style={{ paddingTop: '80px' }}>
         <Navbar routes={routes} />
         <ToastContainer position="top-center" autoClose={5000} />
-      </div>
+      </div> */}
       <Routes>
         {authRouts.map(
           ({ path, element }, key) =>

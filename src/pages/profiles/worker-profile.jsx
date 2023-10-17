@@ -1,6 +1,84 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Card, CardBody, Button } from "@material-tailwind/react";
+import {
+  Card,
+  CardFooter,
+  CardBody,
+  Typography,
+  Button,
+} from "@material-tailwind/react";
 import config from "@/config";
+import { Ripple, initTE } from "tw-elements";
+
+// Initialize Tailwind Elements (TE) with the Ripple component
+initTE({ Ripple });
+
+{/* <div className="flex justify-between mb-2">
+                  <span>Job Type: {job.job_type}</span>
+                  <span>Date: {job.date}</span>
+                  <span>Time: {job.time}</span>
+                  <span>Customer: {job.customer_name}</span>
+                  <span>Weather Forecast: {job.forecast}</span>
+                  <span>Distance: {parseFloat(job.distance.toFixed(2))}km</span>
+                  {status === 'Active' ? (
+                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
+                      Accept Job
+                    </Button>
+                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
+                  Cancel Job
+                </Button>}
+                </div> */}
+
+const JobCard = ({job, handleJob}) => {
+  return (
+    <Card className="mt-6 flex flex-row" style={{ width: '1000px' }}>
+      <CardBody className="ml-1 flex flex-row justify-between">
+        <Typography variant="h6" color="blue">
+          Job Type:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {job.job_type}
+        </Typography>
+        <Typography variant="h6" color="blue">
+          Date:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {job.date}
+        </Typography>
+        <Typography variant="h6" color="blue">
+          Time:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {job.time}
+        </Typography>
+        <Typography variant="h6" color="blue">
+          Customer:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {job.customer_name}
+        </Typography>
+        <Typography variant="h6" color="blue">
+          Weather Forecast:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {job.forecast}
+        </Typography>
+        <Typography variant="h6" color="blue">
+          Distance:&nbsp;&nbsp;
+        </Typography>
+        <Typography className="mr-6">
+          {parseFloat(job.distance.toFixed(2))}km
+        </Typography>
+        {job.status === 'Active' ? (
+                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
+                      Accept Job
+                    </Button>
+                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
+                  Cancel Job
+                </Button>}
+      </CardBody>
+    </Card>
+  );
+}
 
 const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
@@ -26,7 +104,7 @@ function WorkerProfilePage({ userDetails }) {
         getCurrentLocation()
   .then(location => {
     console.log(location.latitude, location.longitude);
-    setWorkerLocation({latitude: location.latitude, longitude: location.latitude});
+    setWorkerLocation({latitude: location.latitude, longitude: location.longitude});
   })
   .catch(error => {
     console.error('Error getting location:', error);
@@ -38,6 +116,25 @@ function WorkerProfilePage({ userDetails }) {
   function isEqual(arr1, arr2) {
     return JSON.stringify(arr1) === JSON.stringify(arr2);
   }  
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const earthRadiusKm = 6371;  // Radius of the Earth in kilometers
+    const dLat = degreesToRadians(lat2 - lat1);
+    const dLon = degreesToRadians(lon2 - lon1);
+  
+    lat1 = degreesToRadians(lat1);
+    lat2 = degreesToRadians(lat2);
+  
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  
+    return earthRadiusKm * c;
+  };
+  
+  const degreesToRadians = (degrees) => {
+    return degrees * (Math.PI / 180);
+  };
 
   const calculateProximity = (jobLocation) => {
     // Simple Euclidean distance formula for proximity using latitude and longitude
@@ -61,12 +158,19 @@ function WorkerProfilePage({ userDetails }) {
       if (response.ok) {
         const data = await response.json();
         const adds = JSON.parse(data).advertisements;
-        console.log(adds);
         // Calculate proximity and sort jobs by proximity
-        const jobsWithProximity = adds.map(job => ({
+        const jobsWithProximity = adds.map(job => {
+          const distance = workerLocation.latitude == 0 ? 0 : calculateDistance(
+            workerLocation.latitude,
+            workerLocation.longitude,
+            job.latitude,
+            job.longitude,
+          );
+          return ({
           ...job,
           proximity: calculateProximity({ latitude: job.latitude, longitude: job.longitude }),
-        }));
+          distance: distance,
+        })});
         jobsWithProximity.sort((a, b) => a.proximity - b.proximity);
 
         setJobs(jobsWithProximity);
@@ -87,7 +191,7 @@ function WorkerProfilePage({ userDetails }) {
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, [userDetails, workerJobTypes]);
+  }, [userDetails, workerLocation]);
 
   const renderJobs = (status) => {
     const handleJob = async (jobId, isAccept) => {
@@ -115,30 +219,13 @@ function WorkerProfilePage({ userDetails }) {
         console.error('Error accepting job:', error);
       }
     };
-  
+
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
       .map((job, index) => {
         return (
           <li key={index}>
-            <Card color="gray" className="mb-4" style={{ marginTop: '20px', width: '1000px' }}>
-              <CardBody>
-                <div className="flex justify-between mb-2">
-                  <span>Job Type: {job.job_type}</span>
-                  <span>Date: {job.date}</span>
-                  <span>Time: {job.time}</span>
-                  <span>Customer: {job.customer_name}</span>
-                  <span>Weather Forecast: {job.forecast}</span>
-                  {status === 'Active' ? (
-                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
-                      Accept Job
-                    </Button>
-                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
-                  Cancel Job
-                </Button>}
-                </div>
-              </CardBody>
-            </Card>
+            <JobCard job={job} handleJob={handleJob} />
           </li>
         );
       });
@@ -147,14 +234,14 @@ function WorkerProfilePage({ userDetails }) {
   return (
     <div style={{ marginLeft: "10%", marginTop: "100px" }}>
       <div>
-        <Typography variant="h3" color="blue-gray" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Active Jobs
         </Typography>
         <ul>{renderJobs("Active")}</ul>
       </div>
 
-      <div>
-        <Typography variant="h3" color="blue-gray" className="mb-2">
+      <div style={{ marginTop: "100px" }}>
+        <Typography variant="h3" color="white" className="mb-2">
           Accepted Jobs
         </Typography>
         <ul>{renderJobs("Accepted")}</ul>

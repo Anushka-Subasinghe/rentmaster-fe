@@ -73,18 +73,6 @@ export const authRouts = [
     path: appRoutes.authRouts.signUp,
     element: <SignUpType />,
   },
-  {
-    icon: UserPlusIcon,
-    name: "Sign Up Customer",
-    path: appRoutes.authRouts.signUpCustomer,
-    element: <SignUp type={userType.customer} />,
-  },
-  {
-    icon: UserPlusIcon,
-    name: "Sign Up Worker",
-    path: appRoutes.authRouts.signUpWorker,
-    element: <SignUp type={userType.worker} />,
-  },
 ];
 
 export const secureRouts = [

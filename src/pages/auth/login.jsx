@@ -1,32 +1,38 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Input,
-  Checkbox,
-  Button,
-  Typography,
-  IconButton,
-} from "@material-tailwind/react";
-import {Navbar, SimpleFooter} from "@/widgets/layout";
-import { appRoutes, userData } from "@/data";
+import { useNavigate } from "react-router-dom";
+import { appRoutes } from "@/data";
 import config from "@/config";
-import { toast } from "react-toastify";
-import routes from "@/routes.jsx";
+import { toast, ToastContainer } from "react-toastify";
+import background from "../../assets/header.png";
 
 export function Login() {
-  const [showPw, setShowPw] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isCustomer, setIsCustomer] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const baseUrl = config.API_BASE_URL;
 
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+      // Check if all fields are filled
+    if (email.length == 0 || password.length == 0 || confirmPassword.length == 0) {
+      toast.error("Please fill in all the fields.");
+      return;
+    }
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    // Check if email is valid
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    
     try {
       const response = await fetch(`${baseUrl}/user/login`, {
         method: "POST",
@@ -38,8 +44,7 @@ export function Login() {
 
       if (response.ok) {
         const userDetails = await response.json();
-        localStorage.setItem("isLogged", JSON.stringify(true));
-        localStorage.setItem("isCustomer", JSON.stringify(true));
+        localStorage.setItem("isLogged", true);
         localStorage.setItem("userDetails", JSON.stringify(userDetails));
         navigate(appRoutes.secureRouts.myProfile, { state: { userDetails } });
       } else {
@@ -56,69 +61,55 @@ export function Login() {
 
   return (
     <>
-      <div className="absolute inset-0 z-0 h-full w-full" style={{background: "blue"}}/>
-      <div className="absolute inset-0 z-0 h-full w-full bg-black/75"/>
-      <div className="container mx-auto p-4">
-        <Card className="absolute left-2/4 top-2/4 w-full max-w-[24rem] -translate-x-2/4 -translate-y-2/4">
-          <CardHeader
-            variant="gradient"
-            color="blue"
-            className="mb-4 grid h-28 place-items-center"
-          >
-            <Typography variant="h3" color="white">
-              Login
-            </Typography>
-          </CardHeader>
-
-          <CardBody className="flex flex-col gap-4">
-            <Input
-                variant="standard"
-                type="email"
-                label="Email"
-                size="lg"
+      <html className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, background: `url(${background})`, backgroundSize: "cover", height: "100vh", overflow: 'auto' }}/>
+      <div className="container pt-10 md:pt-10 mx-auto flex flex-wrap flex-col md:flex-row items-center justify-center">
+        <form className="bg-gray-900 opacity-75 w-3/4 md:w-1/2 shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4" style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+          <div className="mb-4">
+            <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
+              <label className="block text-blue-300 py-2 font-bold mb-2" htmlFor="emailaddress">
+                Login to RentMaster
+              </label>
+            </div>
+            <div style={{display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"}}>
+              <input style={{ width: "400px", marginBottom: "20px"}}
+                className="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="emailaddress"
+                type="text"
+                placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-            <Input
-                variant="standard"
+                onChange={(e) => setEmail(e.target.value.replace(/\s/g, ''))}
+              />
+              <input style={{width: "400px", marginBottom: "20px"}}
+                className="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="password"
                 type="password"
-                label="Password"
-                size="lg"
-                icon={
-                  showPw ? (
-                      <i className="fas fa-eye" onClick={() => setShowPw(false)} />
-                  ) : (
-                      <i className="fas fa-eye-slash" onClick={() => setShowPw(true)} />
-                  )
-                }
+                placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-          </CardBody>
+                onChange={(e) => setPassword(e.target.value.replace(/\s/g, ''))}
+              />
+              <input style={{width: "400px"}}
+                className="shadow appearance-none border rounded w-full p-3 text-gray-700 leading-tight focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ''))}
+              />
+            </div>
+          </div>
 
-          <CardFooter className="pt-0">
-            <Button variant="gradient" fullWidth onClick={handleLogin} size="lg">
+          <div className="flex items-center justify-between pt-1">
+            <button
+              className="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+              type="button"
+              onClick={handleLogin}
+            >
               Login
-            </Button>
-            <Typography variant="small" className="mt-2 flex justify-center">
-              Don't have an account?
-              <Link to={appRoutes.authRouts.signUp}>
-                <Typography
-                  as="span"
-                  variant="small"
-                  color="blue"
-                  className="ml-1 font-bold"
-                >
-                  Sign up
-                </Typography>
-              </Link>
-            </Typography>
-          </CardFooter>
-        </Card>
+            </button>
+          </div>
+        </form>
       </div>
-      <div className="container absolute bottom-6 left-2/4 z-10 mx-auto -translate-x-2/4 text-white">
-        <SimpleFooter />
-      </div>
+      <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
     </>
   );
 }

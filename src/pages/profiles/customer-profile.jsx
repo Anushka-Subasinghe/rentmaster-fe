@@ -36,6 +36,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
     
       // Convert the combined date and time to a Unix timestamp (in seconds)
       const timestamp = combinedDateTime.unix();
+      console.log(timestamp)
   
       const apiKey = "38bde97caffcf4daa9adbfedb5fee58f";
       const apiUrl = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${location[0]}&lon=${location[1]}&dt=${timestamp}&appid=${apiKey}`;
@@ -46,6 +47,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
           const data = await response.json();
           // Assuming the jobDate is in YYYY-MM-DD format
           const jobForecast = data.data[0].weather[0].main;
+          console.log(data);
           return jobForecast;
         } else {
           console.error("Failed to fetch weather forecast");
@@ -284,7 +286,7 @@ const CustomerDashboard = ({ userDetails }) => {
   return (
     <div>
       <div>
-        <Typography variant="h3" color="blue-gray" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Active Advertisements:
         </Typography>
   
@@ -297,25 +299,57 @@ const CustomerDashboard = ({ userDetails }) => {
             {advertisements
               .filter((advertisement) => advertisement.status === "Active")
               .map((advertisement, index) => (
-                <Card key={index} color="gray" className="mb-4" style={{ marginTop: "20px" }}>
-                  <CardBody>
-                    <div className="flex justify-between mb-2">
-                      <span>Job Type: {advertisement.job_type}</span>
-                      <span>Date: {advertisement.date}</span>
-                      <span>Time: {advertisement.time}</span>
-                      <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </CardBody>
-                </Card>
+                // <Card key={index} color="gray" className="mb-4" style={{ marginTop: "20px" }}>
+                //   <CardBody>
+                //     <div className="flex justify-between mb-2">
+                //       <span>Job Type: {advertisement.job_type}</span>
+                //       <span>Date: {advertisement.date}</span>
+                //       <span>Time: {advertisement.time}</span>
+                //       <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+                //         Delete
+                //       </Button>
+                //     </div>
+                //   </CardBody>
+                // </Card>
+                <Card key={index} className="mt-6 flex flex-row justify-between" style={{ marginTop: "20px", width: '1000px' }}>
+  <CardBody className="flex flex-row">
+    <div className="flex">
+      <Typography variant="h6" color="blue">
+        Job Type:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.job_type}
+      </Typography>
+      <Typography variant="h6" color="blue">
+        Date:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.date}
+      </Typography>
+      <Typography variant="h6" color="blue">
+        Time:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.time}
+      </Typography>
+    </div>
+  </CardBody>
+  <div className="flex items-center mr-4">
+    <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+      Delete
+    </Button>
+  </div>
+</Card>
+
+
+
               ))}
           </ul>
         )}
       </div>
   
-      <div>
-        <Typography variant="h3" color="blue-gray" className="mb-2">
+      <div style={{ marginTop: "100px" }}>
+        <Typography variant="h3" color="white" className="mb-2">
           Accepted Advertisements:
         </Typography>
   
@@ -328,14 +362,48 @@ const CustomerDashboard = ({ userDetails }) => {
             {advertisements
               .filter((advertisement) => advertisement.status === "Accepted")
               .map((advertisement, index) => (
-                <Card key={index} color="gray" className="mb-4" style={{ marginTop: '20px' }}>
-              <CardBody>
-                <div className="flex justify-between mb-2">
-                  <span>
-                    Worker Name:
-                    <button
-                      onClick={() => handleWorkerNameClick(advertisement.worker_id)}
-                      style={{
+            //     <Card key={index} color="gray" className="mb-4" style={{ marginTop: '20px' }}>
+            //   <CardBody>
+            //     <div className="flex justify-between mb-2">
+            //       <span>
+            //         Worker Name:
+            //         <button
+            //           onClick={() => handleWorkerNameClick(advertisement.worker_id)}
+            //           style={{
+            //             background: '#3498db',
+            //             color: '#fff',
+            //             border: 'none',
+            //             padding: '8px 16px',
+            //             borderRadius: '5px',
+            //             cursor: 'pointer',
+            //             transition: 'background 0.3s',
+            //             display: 'flex',
+            //             alignItems: 'center',
+            //           }}
+            //         >
+            //           {advertisement.worker_name}
+            //         </button>
+            //       </span>
+            //       <span>Job Type: {advertisement.job_type}</span>
+            //       <span>Date: {advertisement.date}</span>
+            //       <span>Time: {advertisement.time}</span>
+            //       <Button
+            //         color="red"
+            //         onClick={() => handleDeleteAdvertisement(advertisement._id)}
+            //       >
+            //         Delete
+            //       </Button>
+            //     </div>
+            //   </CardBody>
+            // </Card>
+            <Card key={index} className="mt-6 flex flex-row justify-between" style={{ marginTop: "20px", width: '1000px' }}>
+  <CardBody className="flex flex-row">
+    <div className="flex">
+    <div className="flex items-center mr-4">
+    <Typography variant="h6" color="blue">
+        Job Type:&nbsp;&nbsp;
+      </Typography>
+    <Button           style={{
                         background: '#3498db',
                         color: '#fff',
                         border: 'none',
@@ -345,23 +413,36 @@ const CustomerDashboard = ({ userDetails }) => {
                         transition: 'background 0.3s',
                         display: 'flex',
                         alignItems: 'center',
-                      }}
-                    >
-                      {advertisement.worker_name}
-                    </button>
-                  </span>
-                  <span>Job Type: {advertisement.job_type}</span>
-                  <span>Date: {advertisement.date}</span>
-                  <span>Time: {advertisement.time}</span>
-                  <Button
-                    color="red"
-                    onClick={() => handleDeleteAdvertisement(advertisement._id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
+                      }} onClick={() => handleWorkerNameClick(advertisement.worker_id)}>
+    {advertisement.worker_name}
+    </Button>
+  </div>
+      <Typography variant="h6" color="blue">
+        Job Type:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.job_type}
+      </Typography>
+      <Typography variant="h6" color="blue">
+        Date:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.date}
+      </Typography>
+      <Typography variant="h6" color="blue">
+        Time:&nbsp;&nbsp;
+      </Typography>
+      <Typography className="mr-6">
+        {advertisement.time}
+      </Typography>
+    </div>
+  </CardBody>
+  <div className="flex items-center mr-4">
+    <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+      Delete
+    </Button>
+  </div>
+</Card>
               ))}
           </ul>
         )}
