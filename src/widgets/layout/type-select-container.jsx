@@ -40,6 +40,22 @@ export function TypeSelectPage() {
     }
 
     try {
+      const response = await fetch(`${baseUrl}/user/check-email/${email}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response) {
+        toast.error("An account with this email already exists.");
+        return;
+      }
+    } catch (error) {
+      toast.error("An error occurred while checking email availability. Please try again later.");
+      console.log("Error signing up:", error);
+    }
+
+    try {
       const response = await fetch(`${baseUrl}/user/register`, {
         method: "POST",
         headers: {
@@ -74,9 +90,9 @@ export function TypeSelectPage() {
   const navigate = useNavigate();
   return (
     <>
-      <html className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, background: `url(${background})`, backgroundSize: "cover", height: "100vh", overflow: 'auto' }}/>
+      <div className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, background: `url(${background})`, backgroundSize: "cover", height: "100vh", overflow: 'auto' }}/>
       <div className="container pt-10 md:pt-10 mx-auto flex flex-wrap flex-col md:flex-row items-center justify-center">
-        <form className="bg-gray-900 opacity-75 w-3/4 md:w-1/2 shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4" style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <form className="bg-gray-900 opacity-75 w-3/4 md:w-1/2 shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 mt-20" style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
           <div className="mb-4">
             <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
               <label className="block text-blue-300 py-2 font-bold mb-2" htmlFor="emailaddress">

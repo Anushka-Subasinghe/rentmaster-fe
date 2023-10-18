@@ -6,7 +6,7 @@ import { appRoutes } from "@/data";
 
 export function Home () {
   return (
-    <html style={{height: '100vh', // Adjusted to use viewport height
+    <div style={{height: '100vh', // Adjusted to use viewport height
     overflow: 'auto', margin: 0,
     background: `url(${background})`,
     backgroundSize: 'cover'}} lang="en">
@@ -60,6 +60,6 @@ export function Home () {
           </div>
         </div>
       </body>
-    </html>
+    </div>
   );
 };

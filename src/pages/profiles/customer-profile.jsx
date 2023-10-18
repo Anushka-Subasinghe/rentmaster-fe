@@ -1,9 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import { Typography, Input, Button, Card, CardBody } from '@material-tailwind/react';
+import { Typography, Input, Button, Card, CardBody, CardHeader, Menu,
+  MenuHandler,
+  MenuList,
+  MenuItem } from '@material-tailwind/react';
 import config from "@/config";
 import moment from 'moment-timezone';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import popup from '../../assets/popup.jpg';
+import { toast } from 'react-toastify';
+import Modal from 'react-modal';
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -22,7 +27,7 @@ const getCurrentLocation = () => {
   };
 
 const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
-    const [jobType, setJobType] = useState('');
+    const [jobType, setJobType] = useState(null);
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [location, setLocation] = useState([0, 0]);
@@ -46,7 +51,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
         if (response.ok) {
           const data = await response.json();
           // Assuming the jobDate is in YYYY-MM-DD format
-          const jobForecast = data.data[0].weather[0].main;
+          const jobForecast = {weather: data.data[0].weather[0].description, temperature: parseFloat((data.data[0].temp - 273.15).toFixed(1)), humidity: data.data[0].humidity, windspeed: parseFloat(data.data[0].wind_speed.toFixed(1))};
           console.log(data);
           return jobForecast;
         } else {
@@ -105,10 +110,6 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
       return formattedMinTime;
     }
 
-    const handleJobTypeChange = (event) => {
-        setJobType(event.target.value);
-    };
-
     const handleDateChange = (event) => {
         setDate(event.target.value);
     };
@@ -135,9 +136,44 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
       }
     }
 
+    const JobTypeSelectionDropDown = () => 
+      <Menu placement="bottom-start">
+        <MenuHandler>
+          <Button
+            ripple={false}
+            variant="text"
+            className="flex h-10 items-center bg-none"
+            style={{fontSize: '16px'}}
+          >
+            {jobType == null ? 'Select Work Type' : jobType}
+          </Button>
+        </MenuHandler>
+        <MenuList className="max-h-[20rem] max-w-[18rem]">
+          {['cleaner', 'plumber', 'electrician', 'gardener', 'painter'].map(( name, index) => {
+            return (
+              <MenuItem
+                key={index}
+                value={name}
+                className="flex items-center gap-2"
+                onClick={(e) => setJobType(name)}
+              >
+                {name}
+              </MenuItem>
+            );
+          })}
+        </MenuList>
+      </Menu>;
+
 
       const handleSubmit = (event) => {
         event.preventDefault();
+
+        // Check if all required fields are selected
+        if (jobType.length == 0 || date.length == 0 || time.length == 0) {
+          console.log('Please select all required fields.');
+          toast.error('Please select all required fields.');
+          return;
+        }
 
         getWeatherForecast().then((forecast) => {
           // Send a request to post the advertisement to the backend
@@ -155,6 +191,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
             latitude: location[0],
             longitude: location[1],
             forecast: forecast,
+            work_type: jobType == 'cleaner' || jobType == 'electrician' || jobType == 'plumber' ? true : false,
           }),
         })
           .then(response => response.json())
@@ -171,26 +208,16 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
 
     return (
         <div>
-            <Typography variant="h2" color="blue-gray" className="mb-2">
+            <Typography variant="h2" color="white" className="mb-2">
                 Request a Job
             </Typography>
             <form onSubmit={handleSubmit}>
                 <div className="my-4">
-                <select
-                    value={jobType}
-                    onChange={handleJobTypeChange}
-                    className="block w-full px-4 py-2 mt-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    >
-                    <option value="">Select type of work</option>
-                    <option value="cleaner">House Cleaner</option>
-                    <option value="plumber">Plumber</option>
-                    <option value="electrician">Electrician</option>
-                    <option value="gardener">Gardener</option>
-                    <option value="painter">Painter</option>
-                </select>
+                  <JobTypeSelectionDropDown />
                 </div>
                 <div className="my-4">
                     <Input
+                        className='bg-white border border-gray-300 rounded-md'
                         type="date"
                         placeholder="Select date"
                         value={date}
@@ -201,6 +228,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
                 </div>
                 <div className="my-4">
                     <Input
+                        className='bg-white border border-gray-300 rounded-md'
                         type="time"
                         placeholder="Select time"
                         value={time}
@@ -220,6 +248,17 @@ const CustomerDashboard = ({ userDetails }) => {
   const [advertisements, setAdvertisements] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
+  const [selectedAdvertisement, setSelectedAdvertisement] = useState(null);
+
+  // Function to handle opening the modal with bids for the selected advertisement
+  const openBidsModal = (advertisement) => {
+    setSelectedAdvertisement(advertisement);
+  };
+
+  // Function to close the modal
+  const closeBidsModal = () => {
+    setSelectedAdvertisement(null);
+  };
   
 
   const fetchWorkerDetailsById = async (workerId) => {
@@ -290,8 +329,8 @@ const CustomerDashboard = ({ userDetails }) => {
           Active Advertisements:
         </Typography>
   
-        {advertisements.length === 0 ? (
-          <Typography variant="paragraph" color="blue-gray">
+        {advertisements.filter((advertisement) => advertisement.status === "Active").length === 0 ? (
+          <Typography variant="h4" color="white" className="mb-2">
             No active advertisements to display.
           </Typography>
         ) : (
@@ -299,50 +338,38 @@ const CustomerDashboard = ({ userDetails }) => {
             {advertisements
               .filter((advertisement) => advertisement.status === "Active")
               .map((advertisement, index) => (
-                // <Card key={index} color="gray" className="mb-4" style={{ marginTop: "20px" }}>
-                //   <CardBody>
-                //     <div className="flex justify-between mb-2">
-                //       <span>Job Type: {advertisement.job_type}</span>
-                //       <span>Date: {advertisement.date}</span>
-                //       <span>Time: {advertisement.time}</span>
-                //       <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
-                //         Delete
-                //       </Button>
-                //     </div>
-                //   </CardBody>
-                // </Card>
                 <Card key={index} className="mt-6 flex flex-row justify-between" style={{ marginTop: "20px", width: '1000px' }}>
-  <CardBody className="flex flex-row">
-    <div className="flex">
-      <Typography variant="h6" color="blue">
-        Job Type:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.job_type}
-      </Typography>
-      <Typography variant="h6" color="blue">
-        Date:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.date}
-      </Typography>
-      <Typography variant="h6" color="blue">
-        Time:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.time}
-      </Typography>
-    </div>
-  </CardBody>
-  <div className="flex items-center mr-4">
-    <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
-      Delete
-    </Button>
-  </div>
-</Card>
-
-
-
+                  <CardBody className="flex flex-row">
+                    <div className="flex">
+                      <Typography variant="h6" color="blue">
+                        Job Type:&nbsp;&nbsp;
+                      </Typography>
+                      <Typography className="mr-6">
+                        {advertisement.job_type}
+                      </Typography>
+                      <Typography variant="h6" color="blue">
+                        Date:&nbsp;&nbsp;
+                      </Typography>
+                      <Typography className="mr-6">
+                        {advertisement.date}
+                      </Typography>
+                      <Typography variant="h6" color="blue">
+                        Time:&nbsp;&nbsp;
+                      </Typography>
+                      <Typography className="mr-6">
+                        {advertisement.time}
+                      </Typography>
+                    </div>
+                  </CardBody>
+                  <div className="flex items-center mr-4">
+                  <Button className='mr-5' color="blue" onClick={() => openBidsModal(advertisement)}>
+                    View Bids
+                  </Button>
+                    <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+                      Delete
+                    </Button>
+                  </div>
+                </Card>
               ))}
           </ul>
         )}
@@ -353,8 +380,8 @@ const CustomerDashboard = ({ userDetails }) => {
           Accepted Advertisements:
         </Typography>
   
-        {advertisements.length === 0 ? (
-          <Typography variant="paragraph" color="blue-gray">
+        {advertisements.filter((advertisement) => advertisement.status === "Accepted").length === 0 ? (
+          <Typography variant="h4" color="white" className="mb-2">
             No accepted advertisements to display.
           </Typography>
         ) : (
@@ -362,137 +389,198 @@ const CustomerDashboard = ({ userDetails }) => {
             {advertisements
               .filter((advertisement) => advertisement.status === "Accepted")
               .map((advertisement, index) => (
-            //     <Card key={index} color="gray" className="mb-4" style={{ marginTop: '20px' }}>
-            //   <CardBody>
-            //     <div className="flex justify-between mb-2">
-            //       <span>
-            //         Worker Name:
-            //         <button
-            //           onClick={() => handleWorkerNameClick(advertisement.worker_id)}
-            //           style={{
-            //             background: '#3498db',
-            //             color: '#fff',
-            //             border: 'none',
-            //             padding: '8px 16px',
-            //             borderRadius: '5px',
-            //             cursor: 'pointer',
-            //             transition: 'background 0.3s',
-            //             display: 'flex',
-            //             alignItems: 'center',
-            //           }}
-            //         >
-            //           {advertisement.worker_name}
-            //         </button>
-            //       </span>
-            //       <span>Job Type: {advertisement.job_type}</span>
-            //       <span>Date: {advertisement.date}</span>
-            //       <span>Time: {advertisement.time}</span>
-            //       <Button
-            //         color="red"
-            //         onClick={() => handleDeleteAdvertisement(advertisement._id)}
-            //       >
-            //         Delete
-            //       </Button>
-            //     </div>
-            //   </CardBody>
-            // </Card>
             <Card key={index} className="mt-6 flex flex-row justify-between" style={{ marginTop: "20px", width: '1000px' }}>
-  <CardBody className="flex flex-row">
-    <div className="flex">
-    <div className="flex items-center mr-4">
-    <Typography variant="h6" color="blue">
-        Job Type:&nbsp;&nbsp;
-      </Typography>
-    <Button           style={{
-                        background: '#3498db',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        transition: 'background 0.3s',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }} onClick={() => handleWorkerNameClick(advertisement.worker_id)}>
-    {advertisement.worker_name}
-    </Button>
-  </div>
-      <Typography variant="h6" color="blue">
-        Job Type:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.job_type}
-      </Typography>
-      <Typography variant="h6" color="blue">
-        Date:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.date}
-      </Typography>
-      <Typography variant="h6" color="blue">
-        Time:&nbsp;&nbsp;
-      </Typography>
-      <Typography className="mr-6">
-        {advertisement.time}
-      </Typography>
-    </div>
-  </CardBody>
-  <div className="flex items-center mr-4">
-    <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
-      Delete
-    </Button>
-  </div>
-</Card>
+              <CardBody className="flex flex-row">
+                <div className="flex">
+                <div className="flex items-center mr-4">
+                <Typography variant="h6" color="blue">
+                    Job Type:&nbsp;&nbsp;
+                  </Typography>
+                <Button           style={{
+                                    background: '#3498db',
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.3s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                  }} onClick={() => handleWorkerNameClick(advertisement.worker_id)}>
+                {advertisement.worker_name}
+                </Button>
+              </div>
+                  <Typography variant="h6" color="blue">
+                    Job Type:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.job_type}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Date:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.date}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Time:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.time}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Price:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.price}/=
+                  </Typography>
+                </div>
+              </CardBody>
+              <div className="flex items-center mr-4">
+                <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
+                  Delete
+                </Button>
+              </div>
+            </Card>
               ))}
           </ul>
         )}
       </div>
       {/* Render WorkerDetailsPopup */}
       {showPopup && selectedWorker && (
-        <WorkerDetailsPopup workerDetails={selectedWorker} onClose={() => setShowPopup(false)} />
+        <ProfileCard workerDetails={selectedWorker} onClose={() => setShowPopup(false)} />
       )}
+      {/* Modal to display bids for the selected advertisement */}
+      <Modal
+        isOpen={selectedAdvertisement !== null}
+        onRequestClose={closeBidsModal}
+        contentLabel="Bids Modal"
+        style={{
+        content: {
+          width: '1100px', // Adjust the width to match your bid card width
+          margin: 'auto', // Center the modal horizontally
+        },
+        overlay: {
+          background: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+        }
+  }}
+>
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Typography variant="h3" color="black" className="mb-2">
+        Bids for Advertisement
+      </Typography>
+      <span style={{
+        position: 'absolute',
+        top: '0px',
+        right: '20px',
+        fontSize: '36px',
+        color: '#E13E3E',
+        cursor: 'pointer',
+      }} onClick={closeBidsModal}>&times;</span>
+    </div>
+    <div style={{ maxHeight: '400px', overflowY: 'auto' }}> {/* Adjust maxHeight and overflowY as needed */}
+      {selectedAdvertisement && (
+        <ul>
+          {selectedAdvertisement.bid.map((bid, bidIndex) => (
+            <li key={bidIndex}>
+              <BidCard
+                job={selectedAdvertisement}
+                bid={bid}
+                userDetails={userDetails}
+                openBidsModal={openBidsModal}
+                closeBidsModal={closeBidsModal}
+                // onAcceptBid={handleAcceptBid} // Provide the appropriate accept bid handler
+                // onCancelBid={handleCancelBid} // Provide the appropriate cancel bid handler
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</Modal>
     </div>
   );
 };
 
-const WorkerDetailsPopup = ({ workerDetails, onClose }) => {
-  const popupStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  };
+const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal }) => {
+  const { worker_name, price, worker_id } = bid;
 
-  const popupContentStyle = {
-    backgroundImage: `url(${popup})`,
-    backgroundSize: '100% 100%',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)',
-    maxWidth: '400px',
-    width: '100%',
-    position: 'relative',
-    color: '#000',  // Adjust text color based on your image
-  };
+  const cancelBid = async (job) => {
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/advertisement/cancelBid`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: job._id,
+          worker_id: worker_id,
+        }),
+      });
+      const data = await response.json(); 
+      openBidsModal(data);
+    } catch(error) {
+      console.error("Error cancelling bid:", error);  
+    } 
+  }
 
+  const acceptBid = async (job) => {
+    try {
+      // Send a request to update the job status to "Accepted"
+      const response = await fetch(`${config.API_BASE_URL}/advertisement/accept`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: job._id,
+          worker_name: worker_name,
+          worker_id: worker_id,
+          price: price,
+        }),
+      }); 
+      closeBidsModal();
+    } catch (error) {
+      console.error('Error accepting job:', error);
+    }
+  }
+
+  return (
+    <Card style={{ width: '1000px', border: '1px solid gray', borderRadius: '10px', marginBottom: '20px' }}>
+      <CardBody>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}> 
+          <Typography className="mr-10" variant="h4" color="blue">
+            Worker: {worker_name}
+          </Typography>
+          <Typography className="mr-5" variant="h4" color="blue">
+            Price: {price}
+          </Typography>
+        </div>
+        <div>
+          <Button className="mr-5" color="green" onClick={() => acceptBid(job, price)}>
+            Accept Bid
+          </Button>
+          <Button color="red" onClick={() => cancelBid(job, userDetails)}>
+            Cancel Bid
+          </Button>
+        </div>
+      </div>  
+      </CardBody>
+    </Card>
+  );
+};
+
+const ProfileCard = ({ workerDetails, onClose }) => {
   const closeStyle = {
     position: 'absolute',
-    top: '10px',
+    top: '5px',
     right: '10px',
-    fontSize: '24px',
+    fontSize: '36px',
+    color: '#E13E3E',
     cursor: 'pointer',
-  };
-
-  const workerInfoStyle = {
-    marginBottom: '10px',
   };
 
   const generateStars = (rating) => {
@@ -508,31 +596,35 @@ const WorkerDetailsPopup = ({ workerDetails, onClose }) => {
   };
 
   return (
-    <div style={popupStyle}>
-      <div style={popupContentStyle}>
-        <span style={closeStyle} onClick={onClose}>&times;</span>
-        <div style={workerInfoStyle}>
-          <div style={{ fontWeight: 'bold' }}>Worker Name:</div>
-          {workerDetails.username}
+    <div className="flex justify-center items-center h-screen">
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-75">
+          <Card className="w-96">
+            <CardHeader floated={false} className="h-80" style={{
+                  backgroundImage: `url(${popup})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}>
+            </CardHeader>
+            <CardBody className="text-center">
+              <span style={closeStyle} onClick={onClose}>&times;</span>
+              <Typography variant="h4" color="blue-gray" className="mb-2">
+                {workerDetails.username}
+              </Typography>
+              <Typography color="blue-gray" className="font-medium" textGradient>
+                {workerDetails.email}
+              </Typography>
+              <Typography color="blue-gray" className="font-medium" textGradient>
+                Job Types:&nbsp;{workerDetails.job_types.join(', ')}
+              </Typography>
+              <Typography color="blue-gray" className="font-medium" textGradient>
+                Rating:&nbsp;{generateStars(4)}
+              </Typography>
+            </CardBody>
+          </Card>
         </div>
-        <div style={workerInfoStyle}>
-          <div style={{ fontWeight: 'bold' }}>Worker Email:</div>
-          {workerDetails.email}
-        </div>
-        <div style={workerInfoStyle}>
-          <div style={{ fontWeight: 'bold' }}>Job Types:</div>
-          {workerDetails.job_types.join(', ')}
-        </div>
-        <div style={workerInfoStyle}>
-          <div style={{ fontWeight: 'bold' }}>Rating:</div>
-          {generateStars(4)}
-        </div>
-      </div>
     </div>
   );
-};
-
-
+}
 
 const CustomerProfilePage = ({ userDetails }) => {
   // State to manage which view to display

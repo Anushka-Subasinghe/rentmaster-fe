@@ -5,7 +5,7 @@ import CustomerProfilePage from '@/pages/profiles/customer-profile';
 import WorkerProfilePage from './worker-profile';
 import { appRoutes } from '@/data';
 import UserProfileDropdown from './user-profile-dropdown'; // Import the UserProfileDropdown component
-import background from "../../assets/profile.jpg";
+import background from "../../assets/profile.png";
 
 export function Profile() {
   const location = useLocation();
@@ -30,17 +30,17 @@ export function Profile() {
 
   const renderCustomerProfile = () => {
     return (
-      <div>
+     
         <CustomerProfilePage userDetails={userDetails} />
-      </div>
+    
     );
   };
 
   const renderWorkerProfile = () => {
     return (
-      <div>
+      
         <WorkerProfilePage userDetails={userDetails} />
-      </div>
+      
     );
   };
 
@@ -53,22 +53,22 @@ export function Profile() {
   const isCustomer = userDetails.user_type === 'customer';
 
   return (
-    <>
-      <html style={{ margin: 0,
-    background: `url(${background})`,
-    backgroundSize: 'cover',
-    height: '100vh', // Adjusted to use viewport height
-    overflow: 'auto' }}>
-      <div>
-      <nav className="px-4 py-4 h-auto mb-4 w-full flex md:flex-wrap flex-col md:flex-row items-center">
-          <div className="flex flex-wrap flex-grow items-center">
-            <UserProfileDropdown userDetails={userDetails} handleSignOut={handleSignOut} />
-          </div>
-        </nav>
-        {isCustomer ? renderCustomerProfile() : renderWorkerProfile()}
+    <div
+    style={{
+      margin: 0,
+      background: `url(${background})`,
+      backgroundSize: 'cover',
+      height: '100vh', // Adjusted to use viewport height
+      overflow: 'auto',
+    }}
+  >
+    <nav className="px-4 py-4 h-auto mb-4 w-full flex md:flex-wrap flex-col md:flex-row items-center">
+      <div className="flex flex-wrap flex-grow items-center">
+        <UserProfileDropdown userDetails={userDetails} handleSignOut={handleSignOut} />
       </div>
-      </html>
-    </>
+    </nav>
+    {isCustomer ? renderCustomerProfile() : renderWorkerProfile()}
+  </div>
   );
 }
 

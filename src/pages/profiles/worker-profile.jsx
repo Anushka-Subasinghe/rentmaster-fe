@@ -1,35 +1,55 @@
 import React, { useState, useEffect } from "react";
 import {
   Card,
-  CardFooter,
   CardBody,
   Typography,
   Button,
+  Input,
 } from "@material-tailwind/react";
 import config from "@/config";
-import { Ripple, initTE } from "tw-elements";
 
-// Initialize Tailwind Elements (TE) with the Ripple component
-initTE({ Ripple });
+const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
-{/* <div className="flex justify-between mb-2">
-                  <span>Job Type: {job.job_type}</span>
-                  <span>Date: {job.date}</span>
-                  <span>Time: {job.time}</span>
-                  <span>Customer: {job.customer_name}</span>
-                  <span>Weather Forecast: {job.forecast}</span>
-                  <span>Distance: {parseFloat(job.distance.toFixed(2))}km</span>
-                  {status === 'Active' ? (
-                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
-                      Accept Job
-                    </Button>
-                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
-                  Cancel Job
-                </Button>}
-                </div> */}
+  const handleAcceptJob = (job) => {
+    setSelectedJob(job);
+    setIsPopupVisible(true);
+  };
 
-const JobCard = ({job, handleJob}) => {
+  const handlePriceSubmit = (price) => {
+    // Handle price submission and job acceptance
+    // Call the handleJob function with the selected job and price
+    handleJob(selectedJob, true, price);
+    setIsPopupVisible(false);
+  };
+
+  const cancelBid = async (job, userDetails) => {
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/advertisement/cancelBid`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: job._id,
+          worker_id: userDetails.id,
+        }),
+      }); 
+    } catch(error) {
+      console.error("Error cancelling bid:", error);  
+    } 
+  }
+
+  const handleCancel = () => {
+    setIsPopupVisible(false);
+  };
+
+  const hasBid = (job, userDetails) => job.bid.some(bid => bid.worker_id === userDetails.id);
+
+
   return (
+    <>
     <Card className="mt-6 flex flex-row" style={{ width: '1000px' }}>
       <CardBody className="ml-1 flex flex-row justify-between">
         <Typography variant="h6" color="blue">
@@ -60,7 +80,7 @@ const JobCard = ({job, handleJob}) => {
           Weather Forecast:&nbsp;&nbsp;
         </Typography>
         <Typography className="mr-6">
-          {job.forecast}
+          {job.forecast.weather}
         </Typography>
         <Typography variant="h6" color="blue">
           Distance:&nbsp;&nbsp;
@@ -69,14 +89,64 @@ const JobCard = ({job, handleJob}) => {
           {parseFloat(job.distance.toFixed(2))}km
         </Typography>
         {job.status === 'Active' ? (
-                    <Button color="blue" onClick={() => handleJob(job._id, true)}>
-                      Accept Job
-                    </Button>
-                  ) : <Button color="red" onClick={() => handleJob(job._id, false)}>
-                  Cancel Job
-                </Button>}
+        <Button color={!hasBid(job, userDetails) ? "blue" : "green"} onClick={!hasBid(job, userDetails) ? () => handleAcceptJob(job) : () => cancelBid(job, userDetails)}>
+          {hasBid(job, userDetails) ? 'Cancel Bid' : 'Submit Bid'}
+        </Button>
+      ) : (
+        <Button color="red" onClick={() => cancelJob(job)}>
+          Cancel Job
+        </Button>
+      )}
       </CardBody>
     </Card>
+    {isPopupVisible && (
+        <PriceCard onPriceSubmit={handlePriceSubmit} onCancel={handleCancel} prediction={job.prediction} />
+      )}
+    </>
+  );
+}
+
+const PriceCard = ({ onPriceSubmit, onCancel, prediction }) => {
+  const [price, setPrice] = useState(0);
+
+  const handlePriceChange = (event) => {
+    setPrice(event.target.value);
+  };
+
+  const handleSubmit = () => {
+    onPriceSubmit(price);
+  };
+
+  const closeStyle = {
+    position: 'absolute',
+    top: '0px',
+    right: '10px',
+    fontSize: '36px',
+    color: '#E13E3E',
+    cursor: 'pointer',
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-75">
+          <Card className="w-96 justify-center items-center">
+            <CardBody className="text-center">
+              <span style={closeStyle} onClick={onCancel}>&times;</span>
+              {!prediction ? <div className="w-72 mt-4">
+                <Typography variant="h4" color="red" className="mb-2">
+                  The condictions are not suitable for this job
+                </Typography>
+              </div> : <div />}
+              <div className="w-72 mt-4">
+                <Input label="Enter Price" onChange={handlePriceChange} />
+              </div>
+              <div className="w-72 mt-4">
+              <Button variant="gradient" onClick={handleSubmit}>Submit Price</Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+    </div>
   );
 }
 
@@ -194,57 +264,99 @@ function WorkerProfilePage({ userDetails }) {
   }, [userDetails, workerLocation]);
 
   const renderJobs = (status) => {
-    const handleJob = async (jobId, isAccept) => {
+    const handleJob = async (job, isAccept, price = 0) => {
       try {
-        // Send a request to update the job status to "Accepted"
-        const response = await fetch(`${config.API_BASE_URL}/advertisement`, {
+        price = parseFloat(price);
+  
+        const response = await fetch(`${config.API_BASE_URL}/advertisement/bid`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            id: jobId,
-            status: isAccept ? 'Accepted' : 'Active',
-            worker_name: isAccept ? userDetails.name : '',
-            worker_id: isAccept ? userDetails.id : ''
+            id: job._id,
+            worker_name: userDetails.name,
+            worker_id: userDetails.id,
+            price,
           }),
         });
   
         if (response.ok) {
           fetchJobs();
         } else {
-          console.error('Failed to accept job');
+          console.error('Failed to bid to job');
         }
       } catch (error) {
-        console.error('Error accepting job:', error);
+        console.error('Error bidding to job:', error);
+      }
+    };
+
+    const cancelJob = async (job) => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/advertisement/cancelJob`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: job._id,
+          }),
+        });
+  
+        if (response.ok) {
+          fetchJobs();
+        } else {
+          console.error('Failed to bid to job');
+        }
+      } catch (error) {
+        console.error('Error bidding to job:', error);
       }
     };
 
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
       .map((job, index) => {
-        return (
-          <li key={index}>
-            <JobCard job={job} handleJob={handleJob} />
-          </li>
-        );
+        if (job.status == 'Active') {
+          return (
+            <li key={index}>
+              <JobCard job={job} cancelJob={cancelJob} handleJob={handleJob} userDetails={userDetails} />
+            </li>
+          );  
+        } else if (job.worker_id == userDetails.id) {
+          return (
+            <li key={index}>
+              <JobCard job={job} cancelJob={cancelJob} handleJob={handleJob} />
+            </li>
+          );  
+        } else {
+          return;
+        } 
       });
     };
 
   return (
-    <div style={{ marginLeft: "10%", marginTop: "100px" }}>
-      <div>
+    <div className="container mx-auto p-4">
+      <hr className="my-6" />
+      <div className="pt-10">
         <Typography variant="h3" color="white" className="mb-2">
           Active Jobs
         </Typography>
-        <ul>{renderJobs("Active")}</ul>
+        {jobs.filter((job) => job.status === "Active").length === 0 ? (
+          <Typography variant="h4" color="white" className="mb-2">
+            No active jobs to display.
+          </Typography>
+        ) : <ul>{renderJobs("Active")}</ul>}
       </div>
 
       <div style={{ marginTop: "100px" }}>
         <Typography variant="h3" color="white" className="mb-2">
           Accepted Jobs
         </Typography>
-        <ul>{renderJobs("Accepted")}</ul>
+        {jobs.filter((job) => job.status === "Accepted").length === 0 ? (
+          <Typography variant="h4" color="white" className="mb-2">
+            No accepted jobs to display.
+          </Typography>
+        ) : <ul>{renderJobs("Accepted")}</ul>}
       </div>
     </div>
   );
