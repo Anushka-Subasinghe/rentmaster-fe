@@ -352,7 +352,7 @@ function WorkerProfilePage({ userDetails }) {
         <Typography variant="h3" color="white" className="mb-2">
           Accepted Jobs
         </Typography>
-        {jobs.filter((job) => job.status === "Accepted").length === 0 ? (
+        {jobs.filter((job) => job.status === "Accepted").length === 0 || !jobs.filter((job) => job.status === "Accepted").some((job) => job.worker_id == userDetails.id) ? (
           <Typography variant="h4" color="white" className="mb-2">
             No accepted jobs to display.
           </Typography>

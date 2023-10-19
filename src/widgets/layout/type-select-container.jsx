@@ -46,7 +46,8 @@ export function TypeSelectPage() {
           "Content-Type": "application/json",
         },
       });
-      if (response) {
+      const data = await response.json();
+      if (data) {
         toast.error("An account with this email already exists.");
         return;
       }

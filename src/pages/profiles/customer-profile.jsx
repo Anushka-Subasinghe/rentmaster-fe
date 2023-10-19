@@ -7,7 +7,7 @@ import config from "@/config";
 import moment from 'moment-timezone';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import popup from '../../assets/popup.jpg';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import Modal from 'react-modal';
 
 const getCurrentLocation = () => {
@@ -103,10 +103,10 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
     
     const getMinTime = () => {
       const now = new Date();
-
-
+      const selectedDate = new Date(date);
+      const isToday = selectedDate.toDateString() === now.toDateString();
       // Format the time to 'HH:MM' format
-      const formattedMinTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const formattedMinTime = isToday ? `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}` : '';
       return formattedMinTime;
     }
 
@@ -249,15 +249,29 @@ const CustomerDashboard = ({ userDetails }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [selectedAdvertisement, setSelectedAdvertisement] = useState(null);
+  const [selectedBidsAdvertisement, setSelectedBidsAdvertisement] = useState(null);
+  const [selectedWorkersAdvertisement, setSelectedWorkersAdvertisement] = useState(null);
 
   // Function to handle opening the modal with bids for the selected advertisement
   const openBidsModal = (advertisement) => {
-    setSelectedAdvertisement(advertisement);
+    setSelectedBidsAdvertisement(advertisement);
   };
 
   // Function to close the modal
   const closeBidsModal = () => {
-    setSelectedAdvertisement(null);
+    setSelectedBidsAdvertisement(null);
+  };
+
+  // Function to handle opening the modal with bids for the selected advertisement
+  const openWorkersModal = async (advertisement) => {
+    await fetchWorkersByJobType(advertisements.job_type).then(() => {
+      setSelectedAdvertisement(advertisement)
+    });
+  };
+
+  // Function to close the modal
+  const closeWorkersModal = () => {
+    setSelectedWorkersAdvertisement(null);
   };
   
 
@@ -301,16 +315,32 @@ const CustomerDashboard = ({ userDetails }) => {
     }
   };
 
+  const fetchWorkersByJobType = async (jobType) => {
+    try {
+      // const encodedEmail = encodeURIComponent(userDetails.job_type);
+      const response = await fetch(`${config.API_BASE_URL}/user/jobType/${jobType}`);
+      const workers = await response.json();
+      console.log(workers);
+      setSelectedWorkersAdvertisement(workers)
+    } catch (error) {
+      console.error('Error fetching workers:', error);
+    }  
+  };
+
   useEffect(() => {
     // Fetch advertisements initially
     fetchAdvertisements();
 
-    // Poll for updates every 10 seconds (adjust as needed)
+    // Poll for updates every 5 seconds (adjust as needed)
     const intervalId = setInterval(fetchAdvertisements, 5000);
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
+
   }, []);
+
+  useEffect(() => setSelectedBidsAdvertisement(selectedBidsAdvertisement !== null ? advertisements.find((advertisement) => advertisement._id == selectedBidsAdvertisement._id)  : null), [advertisements]);
+  //useEffect(() => setSelectedWorkersAdvertisement(selectedWorkersAdvertisement !== null ? advertisements.find((advertisement) => advertisement._id == selectedWorkersAdvertisement._id)  : null), [advertisements]);
 
   const handleDeleteAdvertisement = async (advertisementId) => {
     try {
@@ -362,7 +392,10 @@ const CustomerDashboard = ({ userDetails }) => {
                     </div>
                   </CardBody>
                   <div className="flex items-center mr-4">
-                  <Button className='mr-5' color="blue" onClick={() => openBidsModal(advertisement)}>
+                  <Button disabled={advertisement.selectedWorkers.length != 0} className='mr-5' color="blue" onClick={() => openWorkersModal(advertisement)}>
+                    Workers
+                  </Button>  
+                  <Button disabled={advertisement.bid.length == 0} className='mr-5' color="blue" onClick={() => openBidsModal(advertisement)}>
                     View Bids
                   </Button>
                     <Button color="red" onClick={() => handleDeleteAdvertisement(advertisement._id)}>
@@ -394,7 +427,7 @@ const CustomerDashboard = ({ userDetails }) => {
                 <div className="flex">
                 <div className="flex items-center mr-4">
                 <Typography variant="h6" color="blue">
-                    Job Type:&nbsp;&nbsp;
+                    Worker:&nbsp;&nbsp;
                   </Typography>
                 <Button           style={{
                                     background: '#3498db',
@@ -452,7 +485,7 @@ const CustomerDashboard = ({ userDetails }) => {
       )}
       {/* Modal to display bids for the selected advertisement */}
       <Modal
-        isOpen={selectedAdvertisement !== null}
+        isOpen={selectedBidsAdvertisement !== null}
         onRequestClose={closeBidsModal}
         contentLabel="Bids Modal"
         style={{
@@ -480,18 +513,16 @@ const CustomerDashboard = ({ userDetails }) => {
       }} onClick={closeBidsModal}>&times;</span>
     </div>
     <div style={{ maxHeight: '400px', overflowY: 'auto' }}> {/* Adjust maxHeight and overflowY as needed */}
-      {selectedAdvertisement && (
+      {selectedBidsAdvertisement && (
         <ul>
-          {selectedAdvertisement.bid.map((bid, bidIndex) => (
+          {selectedBidsAdvertisement.bid.slice().sort((a, b) => a.price - b.price).map((bid, bidIndex) => (
             <li key={bidIndex}>
               <BidCard
-                job={selectedAdvertisement}
+                job={selectedBidsAdvertisement}
                 bid={bid}
                 userDetails={userDetails}
                 openBidsModal={openBidsModal}
                 closeBidsModal={closeBidsModal}
-                // onAcceptBid={handleAcceptBid} // Provide the appropriate accept bid handler
-                // onCancelBid={handleCancelBid} // Provide the appropriate cancel bid handler
               />
             </li>
           ))}
@@ -500,9 +531,104 @@ const CustomerDashboard = ({ userDetails }) => {
     </div>
   </div>
 </Modal>
+    {/* Modal to display available workers for the selected advertisement */}
+    <Modal
+        isOpen={selectedWorkersAdvertisement !== null}
+        onRequestClose={closeBidsModal}
+        contentLabel="Bids Modal"
+        style={{
+        content: {
+          width: '1100px', // Adjust the width to match your bid card width
+          margin: 'auto', // Center the modal horizontally
+        },
+        overlay: {
+          background: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+        }
+  }}
+>
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Typography variant="h3" color="black" className="mb-2">
+        Available Workers for Advertisement
+      </Typography>
+      <span style={{
+        position: 'absolute',
+        top: '0px',
+        right: '20px',
+        fontSize: '36px',
+        color: '#E13E3E',
+        cursor: 'pointer',
+      }} onClick={closeWorkersModal}>&times;</span>
+    </div>
+    <div style={{ maxHeight: '400px', overflowY: 'auto' }}> {/* Adjust maxHeight and overflowY as needed */}
+      {selectedWorkersAdvertisement && (
+        <ul>
+          {selectedWorkersAdvertisement.map((worker, workerIndex) => (
+            <li key={workerIndex}>
+              <WorkerCard
+                worker={worker}
+                openWorkerModal={openWorkersModal}
+                closeWorkerModal={closeWorkersModal}
+                advertisement={selectedAdvertisement}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+</Modal>        
     </div>
   );
 };
+
+const selectWorker = async (advertisement, worker, openWorkerModal) => {
+
+  console.log(worker);
+  try {
+    await fetch(`${config.API_BASE_URL}/advertisement/selectWorker`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: advertisement._id,
+        worker_id: worker._id,
+        name: worker.username,
+        email: worker.email,
+        job_types: worker.job_types 
+      }),
+    }).then(() => {
+      openWorkerModal();  
+    });
+  } catch (error) {
+    console.error('Error fetching advertisements:', error);
+  }
+};
+
+const WorkerCard = ({ worker, openWorkerModal, advertisement }) => {
+  return (
+    <Card style={{ width: '1000px', border: '1px solid gray', borderRadius: '10px', marginBottom: '20px' }}>
+      <CardBody>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}> 
+          <Typography className="mr-10" variant="h4" color="blue">
+            Worker: {worker.username}
+          </Typography>
+          <Typography className="mr-5" variant="h4" color="blue">
+            Email: {worker.email}
+          </Typography>
+        </div>
+        <div>
+          <Button className="mr-5" color="green" onClick={() => selectWorker(advertisement, worker, openWorkerModal)}>
+            Select
+          </Button>
+        </div>
+      </div>  
+      </CardBody>
+    </Card>
+  );  
+}
 
 const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal }) => {
   const { worker_name, price, worker_id } = bid;
@@ -651,6 +777,7 @@ const CustomerProfilePage = ({ userDetails }) => {
         // Display the success page if showForm is false
         <CustomerDashboard userDetails={userDetails} />
       )}
+      <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
     </div>
   );
 };
