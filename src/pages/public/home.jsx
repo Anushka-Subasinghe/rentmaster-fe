@@ -10,7 +10,7 @@ export function Home () {
     overflow: 'auto', margin: 0,
     background: `url(${background})`,
     backgroundSize: 'cover'}} lang="en">
-      <body className="leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed">
+      <body className="leading-normal tracking-normal text-indigo-400 m-6 bg-cover bg-fixed" style={{ background: 'rgba(0, 0, 0, 0.0)' }}>
         <div className="h-full">
           <div className="w-full container mx-auto">
             <div className="w-full flex items-center justify-between">

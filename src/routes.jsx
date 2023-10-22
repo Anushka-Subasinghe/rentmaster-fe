@@ -21,6 +21,8 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/solid";
 import { userType, appRoutes } from "./data";
+import Account from "./pages/profiles/account";
+import EditProfile from "./pages/profiles/edit-profile";
 
 export const routes = [
   {
@@ -120,6 +122,18 @@ export const profileRouts = [
     name: "My Profile",
     path: appRoutes.secureRouts.myProfile,
     element: <Profile />,
+  },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Account",
+    path: appRoutes.secureRouts.account,
+    element: <Account />,
+  },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Edit Account",
+    path: appRoutes.secureRouts.editProfile,
+    element: <EditProfile />,
   },
   {
     icon: ArrowRightOnRectangleIcon,

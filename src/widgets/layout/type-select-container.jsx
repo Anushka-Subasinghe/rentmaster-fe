@@ -12,6 +12,13 @@ export function TypeSelectPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isCustomer, setIsCustomer] = useState(true);
   const [selectedJobTypes, setSelectedJobTypes] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+
+  // Function to toggle the popup visibility
+  const togglePopup = () => {
+    setShowPopup(!showPopup);
+  };
+
   const baseUrl = config.API_BASE_URL;
 
   const handleSignUp = async () => {
@@ -88,6 +95,107 @@ export function TypeSelectPage() {
     }
   };
 
+
+  const PopularJobTypesPopup = ({ jobTypes }) => {
+    return (
+      
+      <div className="sidebar-content" style={{position: 'fixed', top: '50vh',right: '200px', width: '300px', height: '100px',  backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '20px', overflowY: 'auto', boxShadow: '-2px 0 5px rgba(0, 0, 0, 0.1)', transform: 'translate(0, -50%)', // Vertically center the sidebar
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center', // Horizontally center the content
+      padding: '15px', overflow: false}}>
+        <h2 style={{ color: 'green' }}>Popular Job Types</h2>
+        <ul>
+          {jobTypes.map((jobType, index) => (
+            <li key={index}>{jobType}</li>
+          ))}
+        </ul>
+      </div>
+    
+    );
+  };
+
+  const PopularAreasPopup = ({ areas }) => {
+    return (
+      
+      <div className="sidebar-content" style={{marginTop: '20px', position: 'fixed', top: '50vh',right: '200px', width: '300px', height: '100px',  backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '20px', overflowY: 'auto', boxShadow: '-2px 0 5px rgba(0, 0, 0, 0.1)', transform: 'translate(0, 50%)', // Vertically center the sidebar
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center', // Horizontally center the content
+      padding: '15px', overflow: false}}>
+        <h2 style={{ color: 'green' }}>Popular Areas</h2>
+        <ul>
+          {areas.map((area, index) => (
+            <li key={index}>{area}</li>
+          ))}
+        </ul>
+      </div>
+    
+    );
+  };
+
+
+  function generatePopularAreas() {
+    const userInteractionData = {
+      user1: ["nugegoda", "dehiwala", "moratuwa"],
+      user2: ["piliyandala", "dehiwala"],
+      user3: ["nugegoda", "piliyandala", "dehiwala", "kollupitiya"],
+      // Add more user interactions as needed
+    };
+    
+    const jobTypeCounts = {};
+    
+    for (const user in userInteractionData) {
+      const jobTypes = userInteractionData[user];
+      
+      for (const jobType of jobTypes) {
+        if (jobType in jobTypeCounts) {
+          jobTypeCounts[jobType]++;
+        } else {
+          jobTypeCounts[jobType] = 1;
+        }
+      }
+    }  
+    const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
+  
+  // Return the top N popular job types (e.g., top 5)
+  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
+
+  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
+}
+
+  // Function to generate popular job types based on user interactions
+function generatePopularJobTypes() {
+  const userInteractionData = {
+    user1: ["cleaner", "electrician", "painter"],
+    user2: ["plumber", "electrician"],
+    user3: ["cleaner", "plumber", "electrician", "gardener"],
+    // Add more user interactions as needed
+  };
+  
+  const jobTypeCounts = {};
+  
+  for (const user in userInteractionData) {
+    const jobTypes = userInteractionData[user];
+    
+    for (const jobType of jobTypes) {
+      if (jobType in jobTypeCounts) {
+        jobTypeCounts[jobType]++;
+      } else {
+        jobTypeCounts[jobType] = 1;
+      }
+    }
+  }
+
+  // Sort job types by popularity (count)
+  const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
+  
+  // Return the top N popular job types (e.g., top 5)
+  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
+
+  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
+}
+
   const navigate = useNavigate();
   return (
     <>
@@ -139,7 +247,7 @@ export function TypeSelectPage() {
                 </label>
                 <select
                   id="userType"
-                  className="text-gray-700 rounded w-full py-2"
+                  className="text-gray-700 rounded w-full py-2 pl-2"
                   value={isCustomer ? 'customer' : 'worker'}
                   onChange={(e) => setIsCustomer(e.target.value === 'customer')}
                 >
@@ -223,6 +331,10 @@ export function TypeSelectPage() {
         </form>
       </div>
       <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
+      {isCustomer ? null : <div>
+      <PopularJobTypesPopup jobTypes={generatePopularJobTypes()} />
+      <PopularAreasPopup areas={generatePopularAreas()} />
+    </div>}
     </>
   );
 }

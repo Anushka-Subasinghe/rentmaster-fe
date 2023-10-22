@@ -20,6 +20,7 @@ export const appRoutes = {
       demandArea: "/demand-area",
       wheather: "/wheather",
       myProfile: "/profile",
+      account: "/account",
       editProfile: "/edit-profile",
       inbox: "/inbox",
       logout: "/home",

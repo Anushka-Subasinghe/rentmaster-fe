@@ -316,7 +316,7 @@ function WorkerProfilePage({ userDetails }) {
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
       .map((job, index) => {
-        if (job.status == 'Active') {
+        if (job.status == 'Active' && job.selectedWorkers.some((worker) => worker.worker_id == userDetails.id)) {
           return (
             <li key={index}>
               <JobCard job={job} cancelJob={cancelJob} handleJob={handleJob} userDetails={userDetails} />
@@ -341,7 +341,7 @@ function WorkerProfilePage({ userDetails }) {
         <Typography variant="h3" color="white" className="mb-2">
           Active Jobs
         </Typography>
-        {jobs.filter((job) => job.status === "Active").length === 0 ? (
+        {jobs.filter((job) => job.status === "Active").length === 0 || !jobs.some(job => job.selectedWorkers.some((worker) => worker.worker_id == userDetails.id)) ? (
           <Typography variant="h4" color="white" className="mb-2">
             No active jobs to display.
           </Typography>

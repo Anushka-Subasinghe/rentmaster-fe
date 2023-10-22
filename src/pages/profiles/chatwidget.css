@@ -1,0 +1,48 @@
+#small-chat-widget {
+    width: 320px; /* Adjust the width to your desired size */
+    height: 400px; /* Adjust the height to your desired size */
+    bottom: 20px;
+    right: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Customize launcher button style */
+  .launcher {
+    background-color: #0084ff; /* Adjust the color as needed */
+    color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .launcher:hover {
+    background-color: #0066cc; /* Change the color on hover */
+  }
+
+  .quick-buttons-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Style each quick button */
+  .quick-button {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  /* Style quick button on hover */
+  .quick-button:hover {
+    background-color: #0056b3;
+  }

@@ -6,9 +6,23 @@ import { Typography, Input, Button, Card, CardBody, CardHeader, Menu,
 import config from "@/config";
 import moment from 'moment-timezone';
 import { FaStar, FaRegStar } from 'react-icons/fa';
-import popup from '../../assets/popup.jpg';
+import placeHolder from "../../assets/profilePlaceHolder.jfif";
 import { toast, ToastContainer } from 'react-toastify';
 import Modal from 'react-modal';
+import { Widget, addResponseMessage, dropMessages, setQuickButtons, toggleWidget, toggleInputDisabled, addUserMessage } from 'react-chat-widget';
+import 'react-chat-widget/lib/styles.css';
+import './chatWidget.css'
+import chatIcon from "../../assets/chatIcon.png"
+const chatBotUrl = config.CHATBOT_URL;
+
+const getCurrentTimeRoundedToNearestHour = () => {
+  const now = new Date();
+  const minutes = now.getMinutes();
+  const roundedMinutes = Math.round(minutes / 60) * 60; // Round to the nearest hour
+  now.setMinutes(roundedMinutes);
+  const formattedTime = now.toTimeString().slice(0, 5); // Get time in HH:mm format
+  return formattedTime;
+};
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -26,12 +40,120 @@ const getCurrentLocation = () => {
     });
   };
 
-const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
+const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
     const [jobType, setJobType] = useState(null);
     const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
+    const [time, setTime] = useState(getCurrentTimeRoundedToNearestHour());
     const [location, setLocation] = useState([0, 0]);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [buttonType, setButtonType] = useState('');
+    const [buttons, setButtons] = useState([{label: 'Yes', value: 'Yes', buttonClassName: 'custom-quick-button'}, {label: 'No', value: 'No', buttonClassName: 'custom-quick-button'}]);
 
+
+    const handleToggleChat = () => {
+      toggleWidget();
+      setIsChatOpen(!isChatOpen);
+    };
+
+    useEffect(() => {
+      dropMessages();
+      addResponseMessage('Hi. Do you need to request a job?');
+      toggleInputDisabled();
+    }, [showForm])
+
+    useEffect(() => {
+      // deleteMessages(1);
+      // addResponseMessage('Hi. Do you need to request a job?');
+      toggleWidget();
+      setQuickButtons(buttons);
+    },[isChatOpen]);
+
+    useEffect(() => {
+      setQuickButtons(buttons);  
+    },[buttons]);
+
+    const handleNewUserMessage = (newMessage) => {
+      console.log(`New message incoming! ${newMessage}`);
+      // Now send the message through the backend API
+    };
+
+    const handleQuickButtonClicked = async (newMessage) => {
+      console.log(`QuickButtonCLicked! ${newMessage}`);
+      addUserMessage(newMessage);
+      if (buttonType == 'jobType') {
+        setJobType(newMessage);
+      }
+      if (buttonType == 'date') {
+        setDate(newMessage);
+      }
+      // Now send the message through the backend API
+      try {
+        const response = await fetch(chatBotUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ "message": newMessage }),
+        });
+
+        if (response.ok) {
+          const message = await response.json();
+          addResponseMessage(message[0].text);
+          if (message[0].buttons) {
+            console.log(message[0].buttons);
+            const newButtons = message[0].buttons.map((button) => {
+              return {label: button.title, value: button.title, buttonClassName: 'custom-quick-button', type: button.payload}});
+            setQuickButtons(newButtons);
+            setButtons(newButtons);
+            setButtonType(message[0].buttons[0].payload);
+          }
+          handleToggleChat();
+          if (message[0].text == "Job confirmed") {
+            setIsChatOpen(false);
+            handleSubmit(null);
+          } else if (message[0].text == "Job cancelled") {
+            setIsChatOpen(false);  
+          }
+        } else {
+          // Handle error response (e.g., incorrect credentials)
+          const errorResponse = await response.text();
+          console.log(errorResponse);
+          toast.error(errorResponse.detail);
+        }
+      } catch (error) {
+        toast.error("An error occurred while logging in. Please try again later.");
+        console.log("Error logging in:", error);
+      }
+    };
+
+    const closeChat = () => {
+      setIsChatOpen(false);
+    }
+
+    const getLauncher = () => (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '15px',
+          right: '15px',
+          zIndex: '999',
+          width: '60px', // Set the desired width
+          height: '60px', // Set the desired height
+          borderRadius: '50%', // Make it round
+          overflow: 'hidden', // Hide overflowing content
+        }}
+      >
+        <img
+          src={chatIcon}
+          onClick={!isChatOpen ? handleToggleChat : closeChat}
+          style={{
+            width: '100%', // Make the image fully cover the button
+            height: '100%', // Make the image fully cover the button
+          }}
+        />
+      </div>
+    );
+    
     const getWeatherForecast = async () => {
   
       const timeZone = 'Asia/Kolkata';
@@ -166,7 +288,9 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
 
 
       const handleSubmit = (event) => {
-        event.preventDefault();
+        if (event !== null) {
+          event.preventDefault();  
+        }
 
         // Check if all required fields are selected
         if (jobType.length == 0 || date.length == 0 || time.length == 0) {
@@ -240,7 +364,14 @@ const CustomerJobRequestForm = ({ userDetails, toggleView }) => {
                     Submit Request
                 </Button>
             </form>
-        </div>
+            <Widget
+              handleNewUserMessage={handleNewUserMessage}
+              handleQuickButtonClicked={handleQuickButtonClicked}  
+              launcher={getLauncher}
+              showEmoji={false}
+              loading={false}
+            />    
+          </div>
     );
 };
 
@@ -264,7 +395,7 @@ const CustomerDashboard = ({ userDetails }) => {
 
   // Function to handle opening the modal with bids for the selected advertisement
   const openWorkersModal = async (advertisement) => {
-    await fetchWorkersByJobType(advertisements.job_type).then(() => {
+    await fetchWorkersByJobType(advertisement.job_type).then(() => {
       setSelectedAdvertisement(advertisement)
     });
   };
@@ -272,7 +403,9 @@ const CustomerDashboard = ({ userDetails }) => {
   // Function to close the modal
   const closeWorkersModal = () => {
     setSelectedWorkersAdvertisement(null);
+    setSelectedAdvertisement(null);
   };
+  
   
 
   const fetchWorkerDetailsById = async (workerId) => {
@@ -392,7 +525,7 @@ const CustomerDashboard = ({ userDetails }) => {
                     </div>
                   </CardBody>
                   <div className="flex items-center mr-4">
-                  <Button disabled={advertisement.selectedWorkers.length != 0} className='mr-5' color="blue" onClick={() => openWorkersModal(advertisement)}>
+                  <Button className='mr-5' color="blue" onClick={() => openWorkersModal(advertisement)}>
                     Workers
                   </Button>  
                   <Button disabled={advertisement.bid.length == 0} className='mr-5' color="blue" onClick={() => openBidsModal(advertisement)}>
@@ -523,6 +656,8 @@ const CustomerDashboard = ({ userDetails }) => {
                 userDetails={userDetails}
                 openBidsModal={openBidsModal}
                 closeBidsModal={closeBidsModal}
+                setworkers={setSelectedWorkersAdvertisement}
+                setAdd={setSelectedAdvertisement}
               />
             </li>
           ))}
@@ -533,6 +668,7 @@ const CustomerDashboard = ({ userDetails }) => {
 </Modal>
     {/* Modal to display available workers for the selected advertisement */}
     <Modal
+        key={selectedAdvertisement}
         isOpen={selectedWorkersAdvertisement !== null}
         onRequestClose={closeBidsModal}
         contentLabel="Bids Modal"
@@ -567,9 +703,9 @@ const CustomerDashboard = ({ userDetails }) => {
             <li key={workerIndex}>
               <WorkerCard
                 worker={worker}
-                openWorkerModal={openWorkersModal}
                 closeWorkerModal={closeWorkersModal}
                 advertisement={selectedAdvertisement}
+                setAdd={setSelectedAdvertisement}
               />
             </li>
           ))}
@@ -582,9 +718,7 @@ const CustomerDashboard = ({ userDetails }) => {
   );
 };
 
-const selectWorker = async (advertisement, worker, openWorkerModal) => {
-
-  console.log(worker);
+const selectWorker = async (advertisement, worker, closeWorkerModal, setAdd) => {
   try {
     await fetch(`${config.API_BASE_URL}/advertisement/selectWorker`, {
       method: 'PATCH',
@@ -598,15 +732,40 @@ const selectWorker = async (advertisement, worker, openWorkerModal) => {
         email: worker.email,
         job_types: worker.job_types 
       }),
-    }).then(() => {
-      openWorkerModal();  
+    }).then(async (res) => {
+      const data = await res.json();
+      console.log(data);
+      setAdd(data);
+      //closeWorkerModal();  
     });
   } catch (error) {
     console.error('Error fetching advertisements:', error);
   }
 };
 
-const WorkerCard = ({ worker, openWorkerModal, advertisement }) => {
+const cancelWorker = async (advertisement, worker, closeWorkerModal, setAdd) => {
+  try {
+    await fetch(`${config.API_BASE_URL}/advertisement/cancelWorker`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: advertisement._id,
+        worker_id: worker._id, 
+      }),
+    }).then(async (res) => {
+      const data = await res.json();
+      console.log(data);
+      setAdd(data);
+      //closeWorkerModal();  
+    });
+  } catch (error) {
+    console.error('Error fetching advertisements:', error);
+  }
+};
+
+const WorkerCard = ({ worker, closeWorkerModal, advertisement, setAdd }) => {
   return (
     <Card style={{ width: '1000px', border: '1px solid gray', borderRadius: '10px', marginBottom: '20px' }}>
       <CardBody>
@@ -620,8 +779,15 @@ const WorkerCard = ({ worker, openWorkerModal, advertisement }) => {
           </Typography>
         </div>
         <div>
-          <Button className="mr-5" color="green" onClick={() => selectWorker(advertisement, worker, openWorkerModal)}>
-            Select
+          <Button className="mr-5" color={!advertisement.selectedWorkers.some((w) => w.worker_id == worker._id) ? "green" : "red"} onClick={() => {
+            if(!advertisement.selectedWorkers.some((w) => w.worker_id == worker._id)) {
+              selectWorker(advertisement, worker, closeWorkerModal, setAdd)
+            } else {
+              cancelWorker(advertisement, worker, closeWorkerModal, setAdd)
+            }            
+            }}
+            >
+            {!advertisement.selectedWorkers.some((w) => w.worker_id == worker._id) ? "Select" : "Unselect"}
           </Button>
         </div>
       </div>  
@@ -630,7 +796,7 @@ const WorkerCard = ({ worker, openWorkerModal, advertisement }) => {
   );  
 }
 
-const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal }) => {
+const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setworkers, setAdd }) => {
   const { worker_name, price, worker_id } = bid;
 
   const cancelBid = async (job) => {
@@ -666,8 +832,11 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal }) => {
           worker_id: worker_id,
           price: price,
         }),
+      }).then(() => {
+        closeBidsModal(); 
+        setAdd(null);
+        setworkers(null); 
       }); 
-      closeBidsModal();
     } catch (error) {
       console.error('Error accepting job:', error);
     }
@@ -721,15 +890,21 @@ const ProfileCard = ({ workerDetails, onClose }) => {
     return stars;
   };
 
+  const profilePictureSrc = workerDetails.profile_picture
+  ? `data:image/png;base64, ${workerDetails.profile_picture}`
+  : placeHolder;
+
   return (
     <div className="flex justify-center items-center h-screen">
         <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-75">
           <Card className="w-96">
-            <CardHeader floated={false} className="h-80" style={{
-                  backgroundImage: `url(${popup})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}>
+            <CardHeader floated={false} className="h-80" style={{ position: 'relative' }}>
+              <img
+              id="profilePicture"
+              alt="Profile Picture"
+              src={profilePictureSrc}
+              className="shadow-xl h-full w-full object-cover"
+            />
             </CardHeader>
             <CardBody className="text-center">
               <span style={closeStyle} onClick={onClose}>&times;</span>
@@ -770,9 +945,8 @@ const CustomerProfilePage = ({ userDetails }) => {
       </Button> 
 
       {showForm ? ( // Display the job request form if showForm is true
-        
-          <CustomerJobRequestForm userDetails={userDetails} toggleView={toggleView} />
-    
+        <CustomerJobRequestForm userDetails={userDetails} toggleView={toggleView} />  
+
       ) : (
         // Display the success page if showForm is false
         <CustomerDashboard userDetails={userDetails} />

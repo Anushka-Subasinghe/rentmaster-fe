@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import profileIcon from '../../assets/profileIcon.svg';
+import { Avatar } from '@material-tailwind/react';
+import placeHolder from "../../assets/profilePlaceHolder.jfif";
 
-const UserProfileDropdown = ({ userDetails, handleSignOut }) => {
+const UserProfileDropdown = ({ userDetails, handleSignOut, viewProfile }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleToggleDropdown = () => {
@@ -16,11 +17,7 @@ const UserProfileDropdown = ({ userDetails, handleSignOut }) => {
           onClick={handleToggleDropdown}
           className="flex items-center focus:outline-none"
         >
-          <img
-            className="h-10 w-10 rounded-full bg-gray-300 p-2"
-            src={profileIcon}
-            alt="Profile Icon"
-          />
+          <Avatar style={{ borderRadius: '30px' }} src={userDetails.profile_picture ? `data:image/png;base64, ${userDetails.profile_picture}` : placeHolder} alt="avatar" size="md" />
           <span className="font-semibold text-xl ml-2 text-white">{userDetails.name}</span>
         </button>
       </div>
@@ -31,6 +28,13 @@ const UserProfileDropdown = ({ userDetails, handleSignOut }) => {
             <p className="block px-4 py-2 text-sm text-gray-700">
               Email: {userDetails.email}
             </p>
+            <button
+              onClick={() => 
+                viewProfile()}
+                className=" ml-3 mb-3 text-center block px-2 py-2 text-sm text-white font-bold rounded bg-green-300 hover:bg-green-400"
+            >
+              View Profile
+            </button>
             <button
               onClick={() => 
                 handleSignOut()}
