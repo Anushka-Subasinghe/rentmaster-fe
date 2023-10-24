@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
+import annyang from 'annyang';
 import { Typography, Input, Button, Card, CardBody, CardHeader, Menu,
   MenuHandler,
   MenuList,
-  MenuItem } from '@material-tailwind/react';
+  MenuItem, Dialog } from '@material-tailwind/react';
 import config from "@/config";
 import moment from 'moment-timezone';
 import { FaStar, FaRegStar } from 'react-icons/fa';
@@ -14,15 +15,7 @@ import 'react-chat-widget/lib/styles.css';
 import './chatWidget.css'
 import chatIcon from "../../assets/chatIcon.png"
 const chatBotUrl = config.CHATBOT_URL;
-
-const getCurrentTimeRoundedToNearestHour = () => {
-  const now = new Date();
-  const minutes = now.getMinutes();
-  const roundedMinutes = Math.round(minutes / 60) * 60; // Round to the nearest hour
-  now.setMinutes(roundedMinutes);
-  const formattedTime = now.toTimeString().slice(0, 5); // Get time in HH:mm format
-  return formattedTime;
-};
+import phonetic from 'phonetic';
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -40,22 +33,81 @@ const getCurrentLocation = () => {
     });
   };
 
+  const getMinTime = () => {
+    const now = new Date();
+    const formattedMinTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    return formattedMinTime;
+  }
+
 const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
     const [jobType, setJobType] = useState(null);
     const [date, setDate] = useState('');
-    const [time, setTime] = useState(getCurrentTimeRoundedToNearestHour());
+    const [time, setTime] = useState(getMinTime());
     const [location, setLocation] = useState([0, 0]);
     const [isChatOpen, setIsChatOpen] = useState(false);
-    const [buttonType, setButtonType] = useState('');
-    const [buttons, setButtons] = useState([{label: 'Yes', value: 'Yes', buttonClassName: 'custom-quick-button'}, {label: 'No', value: 'No', buttonClassName: 'custom-quick-button'}]);
+    const [buttonType, setButtonType] = useState('initial');
+    const [buttons, setButtons] = useState([{label: 'Yes', value: 'Yes', buttonClassName: 'custom-quick-button', type: 'affirm'}, {label: 'No', value: 'No', buttonClassName: 'custom-quick-button', type: 'decline'}]);
 
+    // Voice Recognition
+  const initVoiceRecognition = () => {
+    annyang.addCommands({
+      'chat': () => {
+        console.log('chat said');
+        // Open the chatbot when the wake word is recognized
+        if (!isChatOpen) {
+          handleToggleChat();  
+        }
+      }
+    });
+    const commands = {}
+    buttons.map((button) => {
+      commands[button.label] = () => {
+        // When the user says a button label, trigger the corresponding action
+        handleQuickButtonClicked(button.label, button.type);
+      };    
+    });
+    annyang.addCommands(commands);
+    console.log(`annyang initialized`)
+    annyang.start();
+  };
+
+  // Text-to-Speech (TTS) function
+  const speakResponse = (text) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Initialize voice recognition and TTS when the component mounts
+  useEffect(() => {
+    initVoiceRecognition();
+    return () => {
+      annyang.removeCommands();
+      annyang.abort();
+    };
+  }, []);
 
     const handleToggleChat = () => {
       toggleWidget();
-      setIsChatOpen(!isChatOpen);
+      if (!isChatOpen) {
+        setIsChatOpen(true);  
+      }
     };
 
+    const closeChat = () => {
+      setIsChatOpen(false);
+      setButtonType('initial');
+      dropMessages();
+      addResponseMessage('Hi. Do you need to request a job?');
+      setButtons([{label: 'Yes', value: 'Yes', buttonClassName: 'custom-quick-button', type: 'affirm'}, {label: 'No', value: 'No', buttonClassName: 'custom-quick-button', type: 'decline'}]);
+      localStorage.removeItem('buttonType');
+      localStorage.removeItem('jobType');
+      localStorage.removeItem('date');
+    }
+
     useEffect(() => {
+      setIsChatOpen(false);
       dropMessages();
       addResponseMessage('Hi. Do you need to request a job?');
       toggleInputDisabled();
@@ -64,8 +116,23 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
     useEffect(() => {
       // deleteMessages(1);
       // addResponseMessage('Hi. Do you need to request a job?');
-      toggleWidget();
-      setQuickButtons(buttons);
+      
+        if (isChatOpen) {
+          toggleWidget();
+          setQuickButtons(buttons);  
+        }    
+
+        console.log(`useEffect isChatOpen ${isChatOpen}`);
+
+      if (!isChatOpen) {
+        speechSynthesis.cancel();
+      }
+
+      if (isChatOpen && buttonType == 'initial') {
+        const buttonLabels = buttons.map((button) => button.label).join(', '); 
+        speakResponse('Hi. Do you need to request a job?');
+        speakResponse(`You can choose from the following options: ${buttonLabels}`);     
+      }
     },[isChatOpen]);
 
     useEffect(() => {
@@ -77,42 +144,112 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
       // Now send the message through the backend API
     };
 
-    const handleQuickButtonClicked = async (newMessage) => {
-      console.log(`QuickButtonCLicked! ${newMessage}`);
-      addUserMessage(newMessage);
-      if (buttonType == 'jobType') {
-        setJobType(newMessage);
+    const speakButtonLabels = (speakButtons) => {
+      if (buttons.length > 0) {
+        const buttonLabels = speakButtons.map((button) => button.label).join(', ');  
+
+        if (speakButtons[0].label.includes('-')) {
+          buttonLabels.split(', ').map((label, index) => {
+            speakResponse(`Select ${index + 1} to choose ${label}`);    
+          })
+        } else {
+          speakResponse(`You can choose from the following options: ${buttonLabels}`);    
+        }
+        // Add the button labels as new voice commands
+        const commands = {};
+        speakButtons.map((button, index) => {
+          console.log(button.label)
+          if (button.label.includes('-')) {
+            console.log(`${index + 1}`);
+            commands[`${index + 1}`] = () => {
+              // When the user says a button label, trigger the corresponding action
+              handleQuickButtonClicked(button.label, button.type);
+            };  
+          } else {
+            commands[button.label] = () => {
+              // When the user says a button label, trigger the corresponding action
+              handleQuickButtonClicked(button.label, button.type);
+            };  
+          }
+        });
+
+        // Add the new voice commands to annyang
+        annyang.addCommands(commands);
+      } else {
+        speakResponse(`There are no options available.`);
       }
-      if (buttonType == 'date') {
+    };
+
+    const handleQuickButtonClicked = async (newMessage, type = null) => {
+      console.log(`QuickButtonCLicked! ${newMessage}`);
+      console.log("buttonType" + buttonType);
+      console.log("jobType" + jobType);
+      console.log("date" + date);
+      console.log("time" + time);
+      // console.log("Type" + type);
+      addUserMessage(newMessage);
+      if (buttonType == 'jobType' || type == 'jobType') {
+        setJobType(newMessage);
+        localStorage.setItem('jobType', newMessage);
+      }
+      if (buttonType == 'date' || type == 'date') {
         setDate(newMessage);
+        localStorage.setItem('date', newMessage);
+        setButtonType(null);
+        localStorage.setItem('buttonType', null);
       }
       // Now send the message through the backend API
       try {
         const response = await fetch(chatBotUrl, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ "message": newMessage }),
+          body: JSON.stringify({ message: newMessage }),
         });
-
+  
         if (response.ok) {
           const message = await response.json();
           addResponseMessage(message[0].text);
+          // Speak out the chatbot's response
+          speakResponse(message[0].text);
+          
           if (message[0].buttons) {
             console.log(message[0].buttons);
             const newButtons = message[0].buttons.map((button) => {
-              return {label: button.title, value: button.title, buttonClassName: 'custom-quick-button', type: button.payload}});
+              return {
+                label: button.title,
+                value: button.title,
+                buttonClassName: 'custom-quick-button',
+                type: button.payload,
+              };
+            });
             setQuickButtons(newButtons);
             setButtons(newButtons);
             setButtonType(message[0].buttons[0].payload);
+            localStorage.setItem('buttonType', message[0].buttons[0].payload);
+            speakButtonLabels(newButtons);
           }
-          handleToggleChat();
-          if (message[0].text == "Job confirmed") {
+          if (message[0].text == 'Job confirmed') {
             setIsChatOpen(false);
-            handleSubmit(null);
-          } else if (message[0].text == "Job cancelled") {
-            setIsChatOpen(false);  
+            handleSubmit(null, true);
+            dropMessages();
+            addResponseMessage('Hi. Do you need to request a job?');
+            setButtons([
+              { label: 'Yes', value: 'Yes', buttonClassName: 'custom-quick-button' },
+              { label: 'No', value: 'No', buttonClassName: 'custom-quick-button' },
+            ]);
+          } else if (message[0].text == 'Job cancelled') {
+            closeChat();
+            toggleWidget();
+            setDate('');
+            setJobType(null);
+          } else if (message[0].text == 'Goodbye') {
+            console.log('Goodbye');
+            closeChat();
+          } else if (message[0].text == 'Please select job type') {
+            console.log(`this toggle`);
+            toggleWidget();
           }
         } else {
           // Handle error response (e.g., incorrect credentials)
@@ -121,14 +258,10 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
           toast.error(errorResponse.detail);
         }
       } catch (error) {
-        toast.error("An error occurred while logging in. Please try again later.");
-        console.log("Error logging in:", error);
+        toast.error('An error occurred while fetching from chatbot. Please try again later.');
+        console.log('Error fetching from chatbot: ', error);
       }
     };
-
-    const closeChat = () => {
-      setIsChatOpen(false);
-    }
 
     const getLauncher = () => (
       <div
@@ -222,15 +355,6 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
         
         return formattedMaxDate;  
     }
-    
-    const getMinTime = () => {
-      const now = new Date();
-      const selectedDate = new Date(date);
-      const isToday = selectedDate.toDateString() === now.toDateString();
-      // Format the time to 'HH:MM' format
-      const formattedMinTime = isToday ? `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}` : '';
-      return formattedMinTime;
-    }
 
     const handleDateChange = (event) => {
         setDate(event.target.value);
@@ -255,6 +379,8 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
           // If the selected time is valid, update the state with the selected time
           setTime(selectedTime);
         }  
+      } else {
+        toast.error('The date has to be selected');
       }
     }
 
@@ -287,13 +413,16 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
       </Menu>;
 
 
-      const handleSubmit = (event) => {
+      const handleSubmit = (event, isChatBot = false) => {
         if (event !== null) {
           event.preventDefault();  
         }
 
+        const type = localStorage.getItem('jobType');
+        const d = localStorage.getItem('date');
+
         // Check if all required fields are selected
-        if (jobType.length == 0 || date.length == 0 || time.length == 0) {
+        if ((!isChatBot ? jobType.length == 0 : type.length == 0) || (!isChatBot ? date.length == 0: d.length == 0) || time.length == 0) {
           console.log('Please select all required fields.');
           toast.error('Please select all required fields.');
           return;
@@ -308,14 +437,19 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
           },
           body: JSON.stringify({
             email: userDetails.email,
-            date: date,
+            date: isChatBot ? d : date,
             time: time,
-            job_type: jobType,
+            job_type: isChatBot ? type : jobType,
             status: "Active",
             latitude: location[0],
             longitude: location[1],
-            forecast: forecast,
-            work_type: jobType == 'cleaner' || jobType == 'electrician' || jobType == 'plumber' ? true : false,
+            forecast: forecast !== null ? forecast : {
+              weather: "light rain",
+              temperature: 28.3,
+              humidity: 69,
+              windspeed: 3.6
+            },
+            work_type: (!isChatBot ? (jobType == 'cleaner' || jobType == 'electrician' || jobType == 'plumber') : (type == 'cleaner' || type == 'electrician' || type == 'plumber')) ? true : false,
           }),
         })
           .then(response => response.json())
@@ -339,7 +473,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
                 <div className="my-4">
                   <JobTypeSelectionDropDown />
                 </div>
-                <div className="my-4">
+                <div className="my-4 bg-white">
                     <Input
                         className='bg-white border border-gray-300 rounded-md'
                         type="date"
@@ -350,8 +484,9 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
                         max={getMaxDate()}
                     />
                 </div>
-                <div className="my-4">
+                <div className="my-4 bg-white">
                     <Input
+                        id='timeInput'
                         className='bg-white border border-gray-300 rounded-md'
                         type="time"
                         placeholder="Select time"
@@ -798,6 +933,8 @@ const WorkerCard = ({ worker, closeWorkerModal, advertisement, setAdd }) => {
 
 const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setworkers, setAdd }) => {
   const { worker_name, price, worker_id } = bid;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPercentage, setSelectedPercentage] = useState(0);
 
   const cancelBid = async (job) => {
     try {
@@ -818,7 +955,12 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setwork
     } 
   }
 
-  const acceptBid = async (job) => {
+  const acceptBid = () => {
+    // Open the dialog to gather the additional percentage.
+    setIsDialogOpen(true);
+  }
+
+  const handleAcceptBid  = async (job) => {
     try {
       // Send a request to update the job status to "Accepted"
       const response = await fetch(`${config.API_BASE_URL}/advertisement/accept`, {
@@ -830,40 +972,85 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setwork
           id: job._id,
           worker_name: worker_name,
           worker_id: worker_id,
-          price: price,
+          price: parseFloat(price) + (parseFloat(price) * selectedPercentage / 100),
         }),
       }).then(() => {
+        setIsDialogOpen(false);
         closeBidsModal(); 
         setAdd(null);
         setworkers(null); 
       }); 
     } catch (error) {
+      setIsDialogOpen(false);
       console.error('Error accepting job:', error);
     }
   }
 
+  const closeStyle = {
+    position: 'absolute',
+    top: '0px',
+    right: '10px',
+    fontSize: '36px',
+    color: '#E13E3E',
+    cursor: 'pointer',
+  };
+
   return (
     <Card style={{ width: '1000px', border: '1px solid gray', borderRadius: '10px', marginBottom: '20px' }}>
       <CardBody>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}> 
-          <Typography className="mr-10" variant="h4" color="blue">
-            Worker: {worker_name}
-          </Typography>
-          <Typography className="mr-5" variant="h4" color="blue">
-            Price: {price}
-          </Typography>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography className="mr-10" variant="h4" color="blue">
+              Worker: {worker_name}
+            </Typography>
+            <Typography className="mr-5" variant="h4" color="blue">
+              Price: {price}
+            </Typography>
+          </div>
+          <div>
+            <Button className="mr-5" color="green" onClick={acceptBid}>
+              Accept Bid
+            </Button>
+            <Button color="red" onClick={() => cancelBid(job, userDetails)}>
+              Cancel Bid
+            </Button>
+          </div>
         </div>
-        <div>
-          <Button className="mr-5" color="green" onClick={() => acceptBid(job, price)}>
-            Accept Bid
-          </Button>
-          <Button color="red" onClick={() => cancelBid(job, userDetails)}>
-            Cancel Bid
-          </Button>
-        </div>
-      </div>  
       </CardBody>
+      {/* Dialog for entering the additional percentage */}
+      {isDialogOpen && <div className="flex justify-center items-center h-screen">
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-75">
+          <Card className="w-96 justify-center items-center">
+            <CardBody className="text-center">
+              <span style={closeStyle} onClick={() => setIsDialogOpen(false)}>&times;</span>
+              <div className="w-72 mt-4">
+                <Typography variant="h4" color="blue" className="mb-2">
+                Enter an additional percentage you want to add to the bid price.
+                </Typography>
+              </div>
+              <div className="w-72 mt-4">
+                <Input label="Enter Percentage" onChange={(e) => setSelectedPercentage(parseFloat(e.target.value))} />
+              </div>
+              <div className="w-72 mt-4">
+              <Button variant="gradient" onClick={() => handleAcceptBid(job)}>Accept Bid with Additional Percentage</Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+    </div>}
+      {/* <Dialog open={isDialogOpen}>
+        <div>
+          <Typography variant="h6">Enter the additional percentage:</Typography>
+          <TextField
+            label="Percentage"
+            type="number"
+            onChange={(e) => setSelectedPercentage(parseFloat(e.target.value))}
+          />
+          <Button color="green" onClick={handleAcceptBid}>
+            Accept Bid with Additional Percentage
+          </Button>
+        </div>
+      </Dialog> */}
     </Card>
   );
 };
@@ -880,15 +1067,31 @@ const ProfileCard = ({ workerDetails, onClose }) => {
 
   const generateStars = (rating) => {
     const stars = [];
+    const filledStars = Math.floor(rating); // Integer part of the rating
+    const remainder = (rating - filledStars) * 100; // Get the remaining percentage
+
     for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} style={{ marginRight: '5px', display: 'inline-block', color: i <= rating ? 'gold' : 'transparent' }}>
-          {i <= rating ? <FaStar /> : <FaRegStar />}
-        </span>
-      );
+        if (i <= filledStars) {
+            stars.push(<FaStar key={i} style={{ color: 'gold' }} />);
+        } else if (i === filledStars + 1) {
+            // Create a partially filled star
+            stars.push(
+                <div key={i} style={{ display: 'flex' }}>
+                    <div style={{ width: `${(remainder / 100) * 24}px`, overflow: 'hidden' }}>
+                        <FaStar style={{ color: 'gold' }} />
+                    </div>
+                </div>
+            );
+        } else {
+            stars.push(<FaRegStar key={i} style={{ color: 'gold' }} />);
+        }
     }
-    return stars;
-  };
+    return (
+        <div style={{ display: 'flex' }}>
+            {stars}
+        </div>
+    );
+};
 
   const profilePictureSrc = workerDetails.profile_picture
   ? `data:image/png;base64, ${workerDetails.profile_picture}`
@@ -917,8 +1120,8 @@ const ProfileCard = ({ workerDetails, onClose }) => {
               <Typography color="blue-gray" className="font-medium" textGradient>
                 Job Types:&nbsp;{workerDetails.job_types.join(', ')}
               </Typography>
-              <Typography color="blue-gray" className="font-medium" textGradient>
-                Rating:&nbsp;{generateStars(4)}
+              <Typography color="blue-gray" className="font-medium" textGradient style={{ display: 'flex', alignItems: 'center' }}>
+                Rating:&nbsp;{generateStars(workerDetails.rating)}
               </Typography>
             </CardBody>
           </Card>

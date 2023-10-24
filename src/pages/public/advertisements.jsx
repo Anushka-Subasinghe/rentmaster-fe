@@ -1,28 +1,53 @@
-import React, { useState, Fragment } from "react";
-import { AddContainer, Footer } from "@/widgets/layout";
-import { Button } from "@material-tailwind/react";
-import { AddApplication } from "@/widgets/diologs";
+import React, { useState, useEffect } from 'react';
+import AdvertisementCard from './advertisement-card';
+import config from '@/config';
 
-export const Advertisements = () => {
-  const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(!open);
+export function Advertisements() {
+  const [workers, setWorkers] = useState([]);
+
+  const baseUrl = config.API_BASE_URL;
+
+  const getWorkers = async () => {
+    try {
+      const response = await fetch(`${baseUrl}/users`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const res = await response.json();
+        console.log(res);
+        return res;
+      } else {
+        // Handle error response (e.g., incorrect credentials)
+        const errorResponse = await response.text();
+        console.log(errorResponse);
+        toast.error(errorResponse.detail);
+      }
+    } catch (error) {
+      toast.error('An error occurred while fetching from chatbot. Please try again later.');
+      console.log('Error fetching from chatbot: ', error);
+    }
+  }
+
+  useEffect(() => {
+    getWorkers().then((res) => {
+      setWorkers(res);
+    });
+  }, []);
+
+
   return (
-    <>
-      <div className="relative h-screen" style={{ height: "110px", background: "blue" }}>
-        <div className="absolute top-0 h-full w-full bg-black/75" />
+    <div class="h-100" style={{ background: 'linear-gradient(to right, rgba(251, 194, 235, 1), rgba(166, 193, 238, 1))' }}> 
+      <div className="row">
+        {workers.map((worker, index) => (
+            <AdvertisementCard worker={worker} />
+        ))}
       </div>
-      <section className="relative flex min-h-[60vh] items-center justify-center bg-black/10 px-4 pb-20 pt-10">
-        <div className="absolute right-10 top-10">
-          <Button onClick={handleOpen}>Create New Addvertisement </Button>
-        </div>
-        <AddContainer />
-      </section>
-      
-      <Fragment>
-        <AddApplication open={open} handleOpen={handleOpen} />
-      </Fragment>
-    </>
+    </div>
   );
-};
+}
 
 export default Advertisements;

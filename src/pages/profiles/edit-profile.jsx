@@ -16,7 +16,8 @@ export function EditProfile() {
         name: userDetails.name,
         email: userDetails.email,
         phone: userDetails.phone,
-        profile_picture: userDetails.profile_picture
+        profile_picture: userDetails.profile_picture,
+        user_type: userDetails.user_type
     });
   }, []);
 
@@ -25,6 +26,7 @@ export function EditProfile() {
     email: '',
     phone: '',
     id: '',
+    user_type: ''
   });
 
   const handleChange = (e) => {
@@ -42,7 +44,7 @@ export function EditProfile() {
         headers: {
             'Content-Type': 'application/json',
           },
-        body: JSON.stringify({username: formData.name, email: formData.email, phone: formData.phone ? formData.phone : '', id: formData.id}),
+        body: JSON.stringify({username: formData.name, email: formData.email, phone: formData.phone ? formData.phone : '', id: formData.id, user_type: formData.user_type}),
       })
       .then(async (response) => {
             const data = await response.json();

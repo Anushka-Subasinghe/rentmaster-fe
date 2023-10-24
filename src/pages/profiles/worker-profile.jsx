@@ -7,6 +7,7 @@ import {
   Input,
 } from "@material-tailwind/react";
 import config from "@/config";
+import badWeather from '../../assets/badWeather.jpg';
 
 const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -100,21 +101,36 @@ const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
       </CardBody>
     </Card>
     {isPopupVisible && (
-        <PriceCard onPriceSubmit={handlePriceSubmit} onCancel={handleCancel} prediction={job.prediction} />
+        <PriceCard onPriceSubmit={handlePriceSubmit} onCancel={handleCancel} prediction={job.prediction} type ={job.job_type} />
       )}
     </>
   );
 }
 
-const PriceCard = ({ onPriceSubmit, onCancel, prediction }) => {
+const PriceCard = ({ onPriceSubmit, onCancel, prediction, type }) => {
   const [price, setPrice] = useState(0);
+  const [percentage, setPercentage] = useState(0);
+
+  useEffect(() => {
+    if(!prediction) {
+      setPercentage(parseFloat(weatherPercentages[type]));
+    }
+  },[])
+
+  const weatherPercentages = {
+    'painter': 20,
+    'cleaner': 10,
+    'electrician': 15,
+    'gardener': 25,
+    'plumber': 10 
+  };
 
   const handlePriceChange = (event) => {
-    setPrice(event.target.value);
+    setPrice(parseFloat(event.target.value));
   };
 
   const handleSubmit = () => {
-    onPriceSubmit(price);
+    onPriceSubmit(price + (price * percentage / 100));
   };
 
   const closeStyle = {
@@ -133,8 +149,12 @@ const PriceCard = ({ onPriceSubmit, onCancel, prediction }) => {
             <CardBody className="text-center">
               <span style={closeStyle} onClick={onCancel}>&times;</span>
               {!prediction ? <div className="w-72 mt-4">
+                <img src={badWeather} alt="Warning" />
                 <Typography variant="h4" color="red" className="mb-2">
-                  The condictions are not suitable for this job
+                  The condictions are not suitable for this job.
+                </Typography>
+                <Typography variant="h4" color="blue" className="mb-2">
+                You will get an extra {percentage}% added to your price.
                 </Typography>
               </div> : <div />}
               <div className="w-72 mt-4">
