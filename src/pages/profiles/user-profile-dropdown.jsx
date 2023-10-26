@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@material-tailwind/react';
 import placeHolder from "../../assets/profilePlaceHolder.jfif";
+import { appRoutes } from "@/data";
 
-const UserProfileDropdown = ({ userDetails, handleSignOut, viewProfile }) => {
+const UserProfileDropdown = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState({});
+
+  const navigate = useNavigate();
+  
+  const handleSignOut = () => {
+    localStorage.setItem("isLogged", false);
+    localStorage.removeItem('userDetails');
+  }
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('userDetails'));
+    setUserDetails(user);
+  },[])
+
+  const viewProfile = () => {
+    navigate(appRoutes.secureRouts.account, { state: { userDetails } });
+  }
 
   const handleToggleDropdown = () => {
     setIsDropdownOpen(prev => !prev);
   };
 
   return (
-    <div className="relative inline-block text-left">
+    <div className="relative inline-block text-left ml-8">
       <div>
         <button
           type="button"

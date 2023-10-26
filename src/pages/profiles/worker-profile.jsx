@@ -9,7 +9,7 @@ import {
 import config from "@/config";
 import badWeather from '../../assets/badWeather.jpg';
 
-const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
+const JobCard = ({job, handleJob, cancelJob, finishJob, userDetails}) => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
@@ -51,7 +51,7 @@ const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
 
   return (
     <>
-    <Card className="mt-6 flex flex-row" style={{ width: '1000px' }}>
+    <Card className="mt-6 flex flex-row">
       <CardBody className="ml-1 flex flex-row justify-between">
         <Typography variant="h6" color="blue">
           Job Type:&nbsp;&nbsp;
@@ -94,9 +94,14 @@ const JobCard = ({job, handleJob, cancelJob, userDetails}) => {
           {hasBid(job, userDetails) ? 'Cancel Bid' : 'Submit Bid'}
         </Button>
       ) : (
-        <Button color="red" onClick={() => cancelJob(job)}>
-          Cancel Job
-        </Button>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button className="mr-5" color="red" onClick={() => cancelJob(job)}>
+            Cancel Job
+          </Button>
+          <Button color="blue" onClick={() => finishJob(job)}>
+            Finish Job
+          </Button>  
+        </div>
       )}
       </CardBody>
     </Card>
@@ -151,7 +156,7 @@ const PriceCard = ({ onPriceSubmit, onCancel, prediction, type }) => {
               {!prediction ? <div className="w-72 mt-4">
                 <img src={badWeather} alt="Warning" />
                 <Typography variant="h4" color="red" className="mb-2">
-                  The condictions are not suitable for this job.
+                  The conditions are not suitable for this job.
                 </Typography>
                 <Typography variant="h4" color="blue" className="mb-2">
                 You will get an extra {percentage}% added to your price.
@@ -193,7 +198,6 @@ function WorkerProfilePage({ userDetails }) {
     useEffect(() => {
         getCurrentLocation()
   .then(location => {
-    console.log(location.latitude, location.longitude);
     setWorkerLocation({latitude: location.latitude, longitude: location.longitude});
   })
   .catch(error => {
@@ -332,6 +336,30 @@ function WorkerProfilePage({ userDetails }) {
         console.error('Error bidding to job:', error);
       }
     };
+    
+    const finishJob = async (job) => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/advertisement/finish`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: job._id,
+          }),
+        });
+  
+        if (response.ok) {
+          const res = await response.json();
+          console.log(res);
+          fetchJobs();
+        } else {
+          console.error('Failed to finish job');
+        }
+      } catch (error) {
+        console.error('Error finishing job:', error);
+      }
+    };
 
     return jobs
       .filter((job) => job.status === status && workerJobTypes.includes(job.job_type))
@@ -339,13 +367,13 @@ function WorkerProfilePage({ userDetails }) {
         if (job.status == 'Active' && job.selectedWorkers.some((worker) => worker.worker_id == userDetails.id)) {
           return (
             <li key={index}>
-              <JobCard job={job} cancelJob={cancelJob} handleJob={handleJob} userDetails={userDetails} />
+              <JobCard job={job} cancelJob={cancelJob} finishJob={finishJob} handleJob={handleJob} userDetails={userDetails} />
             </li>
           );  
         } else if (job.worker_id == userDetails.id) {
           return (
             <li key={index}>
-              <JobCard job={job} cancelJob={cancelJob} handleJob={handleJob} />
+              <JobCard job={job} cancelJob={cancelJob} finishJob={finishJob} handleJob={handleJob} />
             </li>
           );  
         } else {
@@ -356,24 +384,23 @@ function WorkerProfilePage({ userDetails }) {
 
   return (
     <div className="container mx-auto p-4">
-      <hr className="my-6" />
       <div className="pt-10">
-        <Typography variant="h3" color="white" className="mb-2">
+        <Typography variant="h3" color="black" className="mb-2">
           Active Jobs
         </Typography>
         {jobs.filter((job) => job.status === "Active").length === 0 || !jobs.some(job => job.selectedWorkers.some((worker) => worker.worker_id == userDetails.id)) ? (
-          <Typography variant="h4" color="white" className="mb-2">
+          <Typography variant="h4" color="black" className="mb-2">
             No active jobs to display.
           </Typography>
         ) : <ul>{renderJobs("Active")}</ul>}
       </div>
 
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="white" className="mb-2">
+        <Typography variant="h3" color="black" className="mb-2">
           Accepted Jobs
         </Typography>
         {jobs.filter((job) => job.status === "Accepted").length === 0 || !jobs.filter((job) => job.status === "Accepted").some((job) => job.worker_id == userDetails.id) ? (
-          <Typography variant="h4" color="white" className="mb-2">
+          <Typography variant="h4" color="black" className="mb-2">
             No accepted jobs to display.
           </Typography>
         ) : <ul>{renderJobs("Accepted")}</ul>}

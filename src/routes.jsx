@@ -2,25 +2,15 @@ import {
   Home,
   Profile,
   Login,
-  SignUp,
   SignUpType,
-  AppType,
-  ChatBot,
-  CustomerPage,
-  ServiceProviderPage,
-  ProfileView,
-  DemandArea,
-  Wheather,
   Advertisements,
 } from "@/pages";
 import {
   HomeIcon,
-  UserCircleIcon,
   ArrowRightOnRectangleIcon,
   UserPlusIcon,
-  DocumentTextIcon,
 } from "@heroicons/react/24/solid";
-import { userType, appRoutes } from "./data";
+import { appRoutes } from "./data";
 import Account from "./pages/profiles/account";
 import EditProfile from "./pages/profiles/edit-profile";
 
@@ -33,32 +23,11 @@ export const routes = [
     isInfoRoute: false,
   },
   {
-    icon: UserCircleIcon,
-    name: "About Us",
-    path: appRoutes.publicRouts.about,
-    element: "",
-    isInfoRoute: true,
-  },
-  {
     icon: ArrowRightOnRectangleIcon,
     name: "Advertisements",
     path: appRoutes.publicRouts.advertisements,
     element: <Advertisements/>,
     isInfoRoute: false,
-  },
-  {
-    icon: UserPlusIcon,
-    name: "Know More",
-    path: appRoutes.publicRouts.knowMore,
-    element: "",
-    isInfoRoute: true,
-  },
-  {
-    icon: DocumentTextIcon,
-    name: "Contact Us",
-    path: appRoutes.publicRouts.contact,
-    element: "",
-    isInfoRoute: true,
   },
 ];
 
@@ -74,45 +43,6 @@ export const authRouts = [
     name: "Sign Up",
     path: appRoutes.authRouts.signUp,
     element: <SignUpType />,
-  },
-];
-
-export const secureRouts = [
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "App Type",
-    path: appRoutes.secureRouts.appType,
-    element: <AppType />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Chat Bot",
-    path: appRoutes.secureRouts.chatbot,
-    element: <ChatBot />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Customer",
-    path: appRoutes.secureRouts.customer,
-    element: <CustomerPage />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Service Provider",
-    path: appRoutes.secureRouts.serviceProvider,
-    element: <ServiceProviderPage />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Demand Areas",
-    path: appRoutes.secureRouts.demandArea,
-    element: <DemandArea />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Wheather",
-    path: appRoutes.secureRouts.wheather,
-    element: <Wheather />,
   },
 ];
 
@@ -134,12 +64,6 @@ export const profileRouts = [
     name: "Edit Account",
     path: appRoutes.secureRouts.editProfile,
     element: <EditProfile />,
-  },
-  {
-    icon: ArrowRightOnRectangleIcon,
-    name: "Service Provider View",
-    path: appRoutes.viewProfileRouts.serviceProviderView,
-    element: <ProfileView />,
   },
 ];
 

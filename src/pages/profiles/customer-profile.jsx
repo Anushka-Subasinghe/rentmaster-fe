@@ -3,7 +3,8 @@ import annyang from 'annyang';
 import { Typography, Input, Button, Card, CardBody, CardHeader, Menu,
   MenuHandler,
   MenuList,
-  MenuItem, Dialog } from '@material-tailwind/react';
+  MenuItem } from '@material-tailwind/react';
+import { MDBContainer, MDBRating } from 'mdbreact';
 import config from "@/config";
 import moment from 'moment-timezone';
 import { FaStar, FaRegStar } from 'react-icons/fa';
@@ -15,7 +16,7 @@ import 'react-chat-widget/lib/styles.css';
 import './chatWidget.css'
 import chatIcon from "../../assets/chatIcon.png"
 const chatBotUrl = config.CHATBOT_URL;
-import phonetic from 'phonetic';
+import badWeather from '../../assets/badWeather.jpg';
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -430,7 +431,8 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
 
         getWeatherForecast().then((forecast) => {
           // Send a request to post the advertisement to the backend
-        fetch(`${baseUrl}/advertisement`, {
+          console.log(forecast)
+          fetch(`${baseUrl}/advertisement`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -449,7 +451,7 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
               humidity: 69,
               windspeed: 3.6
             },
-            work_type: (!isChatBot ? (jobType == 'cleaner' || jobType == 'electrician' || jobType == 'plumber') : (type == 'cleaner' || type == 'electrician' || type == 'plumber')) ? true : false,
+            work_type: (!isChatBot ? (jobType == 'cleaner' || jobType == 'electrician' || jobType == 'plumber') : (type == 'cleaner' || type == 'electrician' || type == 'plumber')) ? 1 : 0,
           }),
         })
           .then(response => response.json())
@@ -517,6 +519,13 @@ const CustomerDashboard = ({ userDetails }) => {
   const [selectedAdvertisement, setSelectedAdvertisement] = useState(null);
   const [selectedBidsAdvertisement, setSelectedBidsAdvertisement] = useState(null);
   const [selectedWorkersAdvertisement, setSelectedWorkersAdvertisement] = useState(null);
+  const [isRateDialogOpen, setIsRateDialogOpen] = useState(false);
+  const [selectedStars, setSelectedStars] = useState(0);
+  const [ratingWorkerId, setRatingWorkerId] = useState(null);
+
+  useEffect(() => {
+    rateWorker(ratingWorkerId, selectedStars);  
+  },[ratingWorkerId])
 
   // Function to handle opening the modal with bids for the selected advertisement
   const openBidsModal = (advertisement) => {
@@ -545,7 +554,7 @@ const CustomerDashboard = ({ userDetails }) => {
 
   const fetchWorkerDetailsById = async (workerId) => {
     try {
-      const response = await fetch(`${config.API_BASE_URL}/worker/${workerId}`);
+      const response = await fetch(`${config.API_BASE_URL}/user/getUser/${workerId}`);
       const data = await response.json();
       console.log(data);
       return data;
@@ -618,6 +627,46 @@ const CustomerDashboard = ({ userDetails }) => {
     } catch (error) {
       console.error('Error deleting advertisement:', error);
     }
+  };
+
+  const rateWorker = async (workerId, selectedRating) => {
+    // const newRating = (pastRating + selectedRating) / 10;
+    console.log(workerId);
+    if (workerId !== null) {
+      try {
+        await fetchWorkerDetailsById(workerId).then(async (response) => {
+          if (response.ok) {
+            
+          }
+          const r = await response.json();
+          console.log(`r` + r);
+          // await fetch(`${config.API_BASE_URL}/user/rate`, {
+          //   method: 'PATCH',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          //   body: JSON.stringify({
+          //     id: workerId,
+          //     rating: newRating 
+          //   }),
+          // }).then(async (res) => {
+          //   const data = await res.json();
+          //   console.log(data);  
+          // });  
+        })
+      } catch (error) {
+        console.error('Error adding rating:', error);
+      }   
+    } 
+  }
+
+  const closeStyle = {
+    position: 'absolute',
+    top: '0px',
+    right: '10px',
+    fontSize: '36px',
+    color: '#E13E3E',
+    cursor: 'pointer',
   };
 
   return (
@@ -747,6 +796,96 @@ const CustomerDashboard = ({ userDetails }) => {
           </ul>
         )}
       </div>
+
+      <div style={{ marginTop: "100px" }}>
+        <Typography variant="h3" color="white" className="mb-2">
+          Completed Advertisements:
+        </Typography>
+  
+        {advertisements.filter((advertisement) => advertisement.status === "Completed").length === 0 ? (
+          <Typography variant="h4" color="white" className="mb-2">
+            No completed advertisements to display.
+          </Typography>
+        ) : (
+          <ul>
+            {advertisements
+              .filter((advertisement) => advertisement.status === "Completed")
+              .map((advertisement, index) => (
+            <Card key={index} className="mt-6 flex flex-row justify-between" style={{ marginTop: "20px", width: '1000px' }}>
+              <CardBody className="flex flex-row">
+                <div className="flex">
+                <div className="flex items-center mr-4">
+                <Typography variant="h6" color="blue">
+                    Worker:&nbsp;&nbsp;
+                  </Typography>
+                <Button           style={{
+                                    background: '#3498db',
+                                    color: '#fff',
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.3s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                  }} onClick={() => handleWorkerNameClick(advertisement.worker_id)}>
+                {advertisement.worker_name}
+                </Button>
+              </div>
+                  <Typography variant="h6" color="blue">
+                    Job Type:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.job_type}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Date:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.date}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Time:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.time}
+                  </Typography>
+                  <Typography variant="h6" color="blue">
+                    Price:&nbsp;&nbsp;
+                  </Typography>
+                  <Typography className="mr-6">
+                    {advertisement.price}/=
+                  </Typography>
+                </div>
+              </CardBody>
+              <div className="flex items-center mr-4">
+                <Button color="red" onClick={() => setIsRateDialogOpen(true)}>
+                  Rate
+                </Button>
+              </div>
+              {isRateDialogOpen && <div className="flex justify-center items-center h-screen">
+        <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-75">
+          <Card className="w-96 justify-center items-center">
+            <CardBody className="text-center">
+              <span style={closeStyle} onClick={() => setIsRateDialogOpen(false)}>&times;</span>
+              <div className="w-72 mt-4">
+                <Typography variant="h4" color="blue" className="mbR-2">
+                  Rate worker
+                </Typography>
+              </div>
+              <MDBContainer className='ml-16'>
+                <MDBRating iconRegular />
+            </MDBContainer>
+            </CardBody>
+          </Card>
+        </div>
+    </div>}
+            </Card>
+              ))}
+          </ul>
+        )}
+      </div>                            
+
       {/* Render WorkerDetailsPopup */}
       {showPopup && selectedWorker && (
         <ProfileCard workerDetails={selectedWorker} onClose={() => setShowPopup(false)} />
@@ -932,7 +1071,7 @@ const WorkerCard = ({ worker, closeWorkerModal, advertisement, setAdd }) => {
 }
 
 const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setworkers, setAdd }) => {
-  const { worker_name, price, worker_id } = bid;
+  const { worker_name, price, worker_id, worker_rating } = bid;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPercentage, setSelectedPercentage] = useState(0);
 
@@ -1024,6 +1163,7 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setwork
             <CardBody className="text-center">
               <span style={closeStyle} onClick={() => setIsDialogOpen(false)}>&times;</span>
               <div className="w-72 mt-4">
+                <img src={badWeather} alt="Warning" />
                 <Typography variant="h4" color="blue" className="mb-2">
                 Enter an additional percentage you want to add to the bid price.
                 </Typography>
@@ -1038,19 +1178,6 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setwork
           </Card>
         </div>
     </div>}
-      {/* <Dialog open={isDialogOpen}>
-        <div>
-          <Typography variant="h6">Enter the additional percentage:</Typography>
-          <TextField
-            label="Percentage"
-            type="number"
-            onChange={(e) => setSelectedPercentage(parseFloat(e.target.value))}
-          />
-          <Button color="green" onClick={handleAcceptBid}>
-            Accept Bid with Additional Percentage
-          </Button>
-        </div>
-      </Dialog> */}
     </Card>
   );
 };
@@ -1109,7 +1236,7 @@ const ProfileCard = ({ workerDetails, onClose }) => {
               className="shadow-xl h-full w-full object-cover"
             />
             </CardHeader>
-            <CardBody className="text-center">
+            <CardBody className="text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span style={closeStyle} onClick={onClose}>&times;</span>
               <Typography variant="h4" color="blue-gray" className="mb-2">
                 {workerDetails.username}

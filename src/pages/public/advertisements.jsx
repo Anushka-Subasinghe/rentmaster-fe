@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import AdvertisementCard from './advertisement-card';
 import config from '@/config';
+import UncontrolledExample from './carousel';
+import { appRoutes } from "@/data";
+import { Link } from "react-router-dom";
+import one from "../../assets/1.avif";
+import two from "../../assets/2.avif";
+import three from "../../assets/3.avif";
+import { NavbarSimple } from "./homeNavbar";
 
 export function Advertisements() {
   const [workers, setWorkers] = useState([]);
+  const [backgroundIndex, setBackgroundIndex] = useState(0);
+
+    const backgroundImages = [
+        one, two, three
+    ];  
+
+
+    const rotateBackground = () => {
+        // Increment the background image index, and loop back to 0 if it exceeds the number of images.
+        setBackgroundIndex((backgroundIndex + 1) % backgroundImages.length);
+    };
 
   const baseUrl = config.API_BASE_URL;
 
@@ -18,7 +35,6 @@ export function Advertisements() {
 
       if (response.ok) {
         const res = await response.json();
-        console.log(res);
         return res;
       } else {
         // Handle error response (e.g., incorrect credentials)
@@ -40,13 +56,24 @@ export function Advertisements() {
 
 
   return (
-    <div class="h-100" style={{ background: 'linear-gradient(to right, rgba(251, 194, 235, 1), rgba(166, 193, 238, 1))' }}> 
-      <div className="row">
-        {workers.map((worker, index) => (
-            <AdvertisementCard worker={worker} />
-        ))}
-      </div>
+    <div style={{
+      margin: 0,
+      background: `url(${backgroundImages[backgroundIndex]})`,
+      backgroundSize: "cover",
+      height: "100vh",
+      width: "100vw",
+      overflow: "auto",
+      
+  }}>
+          
+          <div style={{ marginLeft: '250px' }}>
+            <NavbarSimple currentPage='advertisements' />
+          </div>  
+          
+        <UncontrolledExample workers={workers} rotateBackground={rotateBackground} />
     </div>
+      
+ 
   );
 }
 

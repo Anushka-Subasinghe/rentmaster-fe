@@ -36,19 +36,16 @@ export function EditProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(formData);
-    // // Handle form submission here
-    // console.log(JSON.stringify({username: formData.name, email: formData.email, phone: formData.phone ? formData.phone : ''}));
+    
     fetch(`${config.API_BASE_URL}/user/updateProfile`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
           },
-        body: JSON.stringify({username: formData.name, email: formData.email, phone: formData.phone ? formData.phone : '', id: formData.id, user_type: formData.user_type}),
+        body: JSON.stringify({username: formData.name, email: formData.email, phone: formData.phone ? formData.phone : '', id: formData.id, user_type: formData.user_type, rating: 5}),
       })
       .then(async (response) => {
             const data = await response.json();
-            console.log(data);
             localStorage.setItem('userDetails', JSON.stringify(data));
             navigate(appRoutes.secureRouts.myProfile, {replace: true});
           
@@ -62,7 +59,6 @@ export function EditProfile() {
     const file = event.target.files[0];
 
     if (file) {
-        console.log('Selected file:', file);
         const formData = new FormData();
         formData.append('file', file);
     
@@ -74,7 +70,6 @@ export function EditProfile() {
             const data = await response.json();
             const storedData = localStorage.getItem('userDetails');
             let yourObject = JSON.parse(storedData);
-            console.log(yourObject);
 
             // Check if the object exists in localStorage
             if (yourObject) {
@@ -83,7 +78,6 @@ export function EditProfile() {
 
                 // Step 3: Save the updated object back to localStorage
                 localStorage.setItem('userDetails', JSON.stringify(yourObject));
-                console.log("YES");
                 navigate(appRoutes.secureRouts.myProfile, {replace: true});
             }
           })

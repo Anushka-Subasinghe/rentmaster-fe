@@ -1,5 +1,5 @@
 import React from "react";
-import { TypeSelectPage } from "@/widgets/layout";
+import { TypeSelectPage } from "./type-select-container";
 
 export function SignUpType() {
   return (

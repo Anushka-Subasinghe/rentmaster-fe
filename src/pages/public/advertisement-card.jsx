@@ -2,7 +2,7 @@ import React from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import placeHolder from "../../assets/profilePlaceHolder.jfif";
-import { FaStar, FaRegStar, FaStarHalfAlt } from 'react-icons/fa';
+import { FaStar, FaRegStar } from 'react-icons/fa';
 
 const generateStars = (rating) => {
     const stars = [];
@@ -38,10 +38,12 @@ const generateStars = (rating) => {
 
 export function AdvertisementCard({ worker }) {
     return (
-        <div className="container py-5 h-100">
-            <div className="row d-flex justify-content-center align-items-center h-100">
-                <div className="col col-lg-9 col-xl-7">
-                    <div className="card">
+        
+                    <div className="card" style={{
+                        height: "80vh",
+                        width: "60vw",
+                        overflow: "auto"
+                      }}>
                         <div className="rounded-top text-white d-flex flex-row" style={{ background: 'linear-gradient(to right, #4b6cb7, #182848)', height: '200px' }}>
                             <div className="ms-4 mt-5 d-flex flex-column" style={{ width: '150px' }}>
                                 <img
@@ -66,14 +68,12 @@ export function AdvertisementCard({ worker }) {
                                     <p className="font-italic mb-1">Email:&nbsp;{worker.email}</p>
                                     <p className="font-italic mb-1">Phone:&nbsp;{worker.phone}</p>
                                     <p className="font-italic mb-1">Job Types:&nbsp;{worker.job_types.join(', ')}</p>
-                                    <p className="font-italic mb-0" style={{ display: 'flex', alignItems: 'center' }}>Rating:&nbsp;{generateStars(4.4)}</p>
+                                    <p className="font-italic mb-0" style={{ display: 'flex', alignItems: 'center' }}>Rating:&nbsp;{generateStars(worker.rating)}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                
     );
 }
 

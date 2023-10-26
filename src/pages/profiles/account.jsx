@@ -3,13 +3,43 @@ import { useNavigate } from 'react-router-dom';
 import background from "../../assets/profile.png";
 import placeHolder from "../../assets/profilePlaceHolder.jfif";
 import { appRoutes } from '@/data';
+import { FaStar, FaRegStar } from 'react-icons/fa';
+
+const generateStars = (rating) => {
+  const stars = [];
+  const filledStars = Math.floor(rating); // Integer part of the rating
+  const remainder = (rating - filledStars) * 100; // Get the remaining percentage
+
+  for (let i = 1; i <= 5; i++) {
+      if (i <= filledStars) {
+          stars.push(<FaStar key={i} style={{ color: 'gold' }} />);
+      } else if (i === filledStars + 1) {
+          // Create a partially filled star
+          stars.push(
+              <div key={i} style={{ display: 'flex' }}>
+                  <div style={{ width: `${(remainder / 100) * 24}px`, overflow: 'hidden' }}>
+                      <FaStar style={{ color: 'gold' }} />
+                  </div>
+              </div>
+          );
+      } else {
+          stars.push(<FaRegStar key={i} style={{ color: 'gold' }} />);
+      }
+  }
+  return (
+      <div style={{ display: 'flex' }}>
+          {stars}
+      </div>
+  );
+};
 
 export function Account () {
     const [userDetails, setUserDetails] = useState({});
 
   useEffect(() => {
-    const userDetails = JSON.parse(localStorage.getItem('userDetails'));
-    setUserDetails(userDetails);
+    const user = JSON.parse(localStorage.getItem('userDetails'));
+    setUserDetails(user);
+    console.log(user);
   }, []);
 
     const navigate = useNavigate();
@@ -61,30 +91,25 @@ export function Account () {
                     </div>
                     <div className="w-full lg:w-4/12 px-4 lg:order-1">
                       <div className="flex justify-center py-4 lg:pt-4 pt-8">
-                        {/* <div className="mr-4 p-3 text-center">
-                          <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600">22</span><span className="text-sm text-blueGray-400">Friends</span>
-                        </div>
-                        <div className="mr-4 p-3 text-center">
-                          <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600">10</span><span className="text-sm text-blueGray-400">Photos</span>
-                        </div>
-                        <div className="lg:mr-4 p-3 text-center">
-                          <span className="text-xl font-bold block uppercase tracking-wide text-blueGray-600">89</span><span className="text-sm text-blueGray-400">Comments</span>
-                        </div> */}
+                        
                       </div>
                     </div>
                   </div>
-                  <div className="text-center mt-12">
+                  <div className="text-center mt-12" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h3 className="text-4xl font-semibold leading-normal mb-2 text-blueGray-700 mb-2">
                         {userDetails.name}
                     </h3>
                     <div className="text-sm leading-normal mt-0 mb-2 text-blueGray-400 font-bold">
                       {userDetails.email}
                     </div>
-                    {userDetails.user_type == 'worker' && <div className="mb-2 text-blueGray-600 mt-10">
+                    {userDetails.user_type == 'worker' && <div className="mb-2 text-blueGray-600" style={{ marginTop:  userDetails.phone ? 10 : 0}}>
                       <i className="fas fa-briefcase mr-2 text-lg text-blueGray-400"></i>{userDetails.job_types.join(', ')}
                     </div>}
                     {userDetails.phone && <div className="mb-2 text-blueGray-600">
                       <i className="fas fa-phone mr-2 text-lg text-blueGray-400"></i>{userDetails.phone}
+                    </div>}
+                    {userDetails.user_type == 'worker' && <div className="mb-2 text-blueGray-600">
+                      <p className="font-italic mr-2 text-lg" style={{ display: 'flex', alignItems: 'center' }}>Rating:&nbsp;{generateStars(userDetails.rating)}</p>
                     </div>}
                   </div>
                   

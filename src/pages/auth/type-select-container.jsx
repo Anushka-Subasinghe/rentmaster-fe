@@ -4,6 +4,7 @@ import background from "../../assets/header.png";
 import config from "@/config";
 import { toast, ToastContainer } from "react-toastify";
 import { appRoutes } from "@/data";
+import { NavbarSimple } from "../public/homeNavbar";
 
 export function TypeSelectPage() {
   const [name, setName] = useState("");
@@ -12,12 +13,6 @@ export function TypeSelectPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isCustomer, setIsCustomer] = useState(true);
   const [selectedJobTypes, setSelectedJobTypes] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
-
-  // Function to toggle the popup visibility
-  const togglePopup = () => {
-    setShowPopup(!showPopup);
-  };
 
   const baseUrl = config.API_BASE_URL;
 
@@ -199,9 +194,11 @@ function generatePopularJobTypes() {
   const navigate = useNavigate();
   return (
     <>
-      <div className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, background: `url(${background})`, backgroundSize: "cover", height: "100vh", overflow: 'auto' }}/>
-      <div className="container pt-10 md:pt-10 mx-auto flex flex-wrap flex-col md:flex-row items-center justify-center">
-        <form className="bg-gray-900 opacity-75 w-3/4 md:w-1/2 shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4 mt-20" style={{ display: "flex", flexDirection: "column", alignItems: "center"}}>
+      <div className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, backgroundColor: `ghostwhite`, backgroundSize: "cover", height: "100vh", overflow: 'auto', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}/>
+      <div style={{ marginLeft: '250px' }}>
+            <NavbarSimple currentPage='signUp' />
+          </div> 
+        <form className="bg-gray-700 opacity-75 mt-20 pb-4 pt-4 mb-10" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: '700px', marginLeft: '550px', borderRadius: '20px'}}>
           <div className="mb-4">
             <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
               <label className="block text-blue-300 py-2 font-bold mb-2" htmlFor="emailaddress">
@@ -321,7 +318,7 @@ function generatePopularJobTypes() {
 
           <div className="flex items-center justify-between pt-1">
             <button
-              className="bg-gradient-to-r from-purple-800 to-green-500 hover:from-pink-500 hover:to-green-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
+              className="bg-indigo-500 text-white font-bold py-2 px-4 rounded focus:ring transform transition hover:scale-105 duration-300 ease-in-out"
               type="button"
               onClick={handleSignUp}
             >
@@ -329,7 +326,6 @@ function generatePopularJobTypes() {
             </button>
           </div>
         </form>
-      </div>
       <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
       {isCustomer ? null : <div>
       <PopularJobTypesPopup jobTypes={generatePopularJobTypes()} />
