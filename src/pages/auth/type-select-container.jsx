@@ -90,68 +90,6 @@ export function TypeSelectPage() {
     }
   };
 
-
-  function generatePopularAreas() {
-    const userInteractionData = {
-      user1: ["nugegoda", "dehiwala", "moratuwa"],
-      user2: ["piliyandala", "dehiwala"],
-      user3: ["nugegoda", "piliyandala", "dehiwala", "kollupitiya"],
-      // Add more user interactions as needed
-    };
-    
-    const jobTypeCounts = {};
-    
-    for (const user in userInteractionData) {
-      const jobTypes = userInteractionData[user];
-      
-      for (const jobType of jobTypes) {
-        if (jobType in jobTypeCounts) {
-          jobTypeCounts[jobType]++;
-        } else {
-          jobTypeCounts[jobType] = 1;
-        }
-      }
-    }  
-    const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
-  
-  // Return the top N popular job types (e.g., top 5)
-  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
-
-  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
-}
-
-  // Function to generate popular job types based on user interactions
-function generatePopularJobTypes() {
-  const userInteractionData = {
-    user1: ["cleaner", "electrician", "painter"],
-    user2: ["plumber", "electrician"],
-    user3: ["cleaner", "plumber", "electrician", "gardener"],
-    // Add more user interactions as needed
-  };
-  
-  const jobTypeCounts = {};
-  
-  for (const user in userInteractionData) {
-    const jobTypes = userInteractionData[user];
-    
-    for (const jobType of jobTypes) {
-      if (jobType in jobTypeCounts) {
-        jobTypeCounts[jobType]++;
-      } else {
-        jobTypeCounts[jobType] = 1;
-      }
-    }
-  }
-
-  // Sort job types by popularity (count)
-  const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
-  
-  // Return the top N popular job types (e.g., top 5)
-  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
-
-  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
-}
-
   const navigate = useNavigate();
   return (
     <>
@@ -288,10 +226,6 @@ function generatePopularJobTypes() {
           </div>
         </form>
       <ToastContainer position="top-center" autoClose={1000} hideProgressBar />
-      {isCustomer ? null : <div>
-      <PopularJobTypesPopup jobTypes={generatePopularJobTypes()} />
-      <PopularAreasPopup areas={generatePopularAreas()} />
-    </div>}
     </>
   );
 }
