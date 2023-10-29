@@ -13,6 +13,9 @@ import {
 import { appRoutes } from "./data";
 import Account from "./pages/profiles/account";
 import EditProfile from "./pages/profiles/edit-profile";
+import Recommendations from "./pages/profiles/recommendations";
+import Calendar from "./pages/profiles/calendar";
+import ChatPage from "./pages/profiles/chatPage";
 
 export const routes = [
   {
@@ -65,6 +68,24 @@ export const profileRouts = [
     path: appRoutes.secureRouts.editProfile,
     element: <EditProfile />,
   },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Recommendations",
+    path: appRoutes.secureRouts.recommendations,
+    element: <Recommendations />,
+  },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Calendar",
+    path: appRoutes.secureRouts.calendar,
+    element: <Calendar />,
+  },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Chatbot",
+    path: appRoutes.secureRouts.chatbot,
+    element: <ChatPage />,
+  }
 ];
 
 export default routes;

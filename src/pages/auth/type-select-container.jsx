@@ -91,45 +91,6 @@ export function TypeSelectPage() {
   };
 
 
-  const PopularJobTypesPopup = ({ jobTypes }) => {
-    return (
-      
-      <div className="sidebar-content" style={{position: 'fixed', top: '50vh',right: '200px', width: '300px', height: '100px',  backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '20px', overflowY: 'auto', boxShadow: '-2px 0 5px rgba(0, 0, 0, 0.1)', transform: 'translate(0, -50%)', // Vertically center the sidebar
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center', // Horizontally center the content
-      padding: '15px', overflow: false}}>
-        <h2 style={{ color: 'green' }}>Popular Job Types</h2>
-        <ul>
-          {jobTypes.map((jobType, index) => (
-            <li key={index}>{jobType}</li>
-          ))}
-        </ul>
-      </div>
-    
-    );
-  };
-
-  const PopularAreasPopup = ({ areas }) => {
-    return (
-      
-      <div className="sidebar-content" style={{marginTop: '20px', position: 'fixed', top: '50vh',right: '200px', width: '300px', height: '100px',  backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '20px', overflowY: 'auto', boxShadow: '-2px 0 5px rgba(0, 0, 0, 0.1)', transform: 'translate(0, 50%)', // Vertically center the sidebar
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center', // Horizontally center the content
-      padding: '15px', overflow: false}}>
-        <h2 style={{ color: 'green' }}>Popular Areas</h2>
-        <ul>
-          {areas.map((area, index) => (
-            <li key={index}>{area}</li>
-          ))}
-        </ul>
-      </div>
-    
-    );
-  };
-
-
   function generatePopularAreas() {
     const userInteractionData = {
       user1: ["nugegoda", "dehiwala", "moratuwa"],

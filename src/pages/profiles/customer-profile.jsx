@@ -457,6 +457,9 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
           .then(response => response.json())
           .then(data => {
             console.log('Advertisement posted successfully:', data);
+            localStorage.removeItem('jobType');
+            localStorage.removeItem('date');
+            localStorage.removeItem('buttonType');
             handleViewRequestForm();
             return data;
           })
@@ -502,6 +505,8 @@ const CustomerJobRequestForm = ({ userDetails, toggleView, showForm }) => {
                 </Button>
             </form>
             <Widget
+              title="RentMaster Chatbot"
+              subtitle="Use me to request your job"
               handleNewUserMessage={handleNewUserMessage}
               handleQuickButtonClicked={handleQuickButtonClicked}  
               launcher={getLauncher}
@@ -672,12 +677,12 @@ const CustomerDashboard = ({ userDetails }) => {
   return (
     <div>
       <div>
-        <Typography variant="h3" color="white" className="mb-2">
+        <Typography variant="h3" color="black" className="mb-2">
           Active Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Active").length === 0 ? (
-          <Typography variant="h4" color="white" className="mb-2">
+          <Typography variant="h4" color="black" className="mb-2">
             No active advertisements to display.
           </Typography>
         ) : (
@@ -726,12 +731,12 @@ const CustomerDashboard = ({ userDetails }) => {
       </div>
   
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="white" className="mb-2">
+        <Typography variant="h3" color="black" className="mb-2">
           Accepted Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Accepted").length === 0 ? (
-          <Typography variant="h4" color="white" className="mb-2">
+          <Typography variant="h4" color="black" className="mb-2">
             No accepted advertisements to display.
           </Typography>
         ) : (
@@ -798,12 +803,12 @@ const CustomerDashboard = ({ userDetails }) => {
       </div>
 
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="white" className="mb-2">
+        <Typography variant="h3" color="black" className="mb-2">
           Completed Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Completed").length === 0 ? (
-          <Typography variant="h4" color="white" className="mb-2">
+          <Typography variant="h4" color="black" className="mb-2">
             No completed advertisements to display.
           </Typography>
         ) : (
@@ -1165,7 +1170,7 @@ const BidCard = ({ job, bid, userDetails, openBidsModal, closeBidsModal, setwork
               <div className="w-72 mt-4">
                 <img src={badWeather} alt="Warning" />
                 <Typography variant="h4" color="blue" className="mb-2">
-                Enter an additional percentage you want to add to the bid price.
+                If you wish to add an additional amount due to adverse weather conditions,enter an additional percentage.
                 </Typography>
               </div>
               <div className="w-72 mt-4">

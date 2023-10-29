@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import CustomerProfilePage from '@/pages/profiles/customer-profile';
 import WorkerProfilePage from './worker-profile';
 import { appRoutes } from '@/data';
-import background from "../../assets/profile.png";
 import ProfileNavbar from './profileNavbar';
 
 export function Profile() {
@@ -45,15 +44,16 @@ export function Profile() {
   };
 
   const isCustomer = userDetails.user_type === 'customer';
+  console.log(`isCustomer`, isCustomer);
 
   return (
  <>
     <div className="absolute inset-0 z-0 h-full w-full"
     
   >
-    <div>
+    <div key={isCustomer ? 1 : 0}>
       <div style={{ marginLeft: '250px' }}>
-            <ProfileNavbar currentPage='dashboard' />
+            <ProfileNavbar currentPage='dashboard' isCustomer={isCustomer} />
       </div>
     {isCustomer ? renderCustomerProfile() : renderWorkerProfile()}
     </div>

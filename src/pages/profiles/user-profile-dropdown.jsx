@@ -13,6 +13,7 @@ const UserProfileDropdown = () => {
   const handleSignOut = () => {
     localStorage.setItem("isLogged", false);
     localStorage.removeItem('userDetails');
+    navigate(appRoutes.publicRouts.home, { replace: true });
   }
 
   useEffect(() => {
