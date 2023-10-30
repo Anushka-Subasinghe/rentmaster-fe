@@ -425,7 +425,7 @@ export function Recommendations() {
         <h1 className='text-black' style={{ fontSize: '28px', fontWeight: 'bolder' }}>RECOMMENDED FOR YOU!</h1>
       </div>
     <SimpleMap key={jobs !== null ? 1 : 0} location={userLocation} popularAreas={popularAreas} popularJobTypes={popularJobs} user={userDetails} jobs={jobs} recommendedWorkers={userDetails && userDetails.user_type == 'customer' ? recommendedWorkers : null} searched={searched} setSearched={setSearched}/>
-    {userDetails !== null && userDetails.user_type == 'customer' ? <div><PopularAreasPopup areas={popularAreas} />
+    {userDetails !== null && userDetails.user_type == 'worker' ? <div><PopularAreasPopup areas={popularAreas} />
     <PopularJobTypesPopup jobTypes={popularJobs} /> </div> : <div/>}
     {searched && recommendedWorkers ? (
   <div>
