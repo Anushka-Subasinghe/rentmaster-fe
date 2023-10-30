@@ -166,6 +166,7 @@ function ChatPage() {
     
     if(!isWidgetOpened()){
       toggleWidget();
+      addResponseMessage('Hi. Do you need to request a job?');
     }
     
     return () => {
