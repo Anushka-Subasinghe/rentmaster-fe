@@ -56,7 +56,7 @@ function worker({ name, contact, location, rating, jobType, profile_picture }) {
 }
 
 
-
+//Collabarative filtering algorithm is used to generate popular areas
 function generatePopularAreas() {
     const userInteractionData = {
       user1: ["Nugegoda", "Dehiwala", "Moratuwa"],
@@ -96,6 +96,38 @@ function generatePopularAreas() {
   console.log(popAreaCoords);
   return popAreaCoords;
 };
+
+//Collabarative filtering algorithm is used to generate popular areas
+function generatePopularJobTypes() {
+  const userInteractionData = {
+    user1: ["cleaner", "electrician", "painter"],
+    user2: ["plumber", "electrician"],
+    user3: ["cleaner", "plumber", "electrician", "gardener"],
+    // Add more user interactions as needed
+  };
+  
+  const jobTypeCounts = {};
+  
+  for (const user in userInteractionData) {
+    const jobTypes = userInteractionData[user];
+    
+    for (const jobType of jobTypes) {
+      if (jobType in jobTypeCounts) {
+        jobTypeCounts[jobType]++;
+      } else {
+        jobTypeCounts[jobType] = 1;
+      }
+    }
+  }
+
+  // Sort job types by popularity (count)
+  const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
+  
+  // Return the top N popular job types (e.g., top 5)
+  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
+
+  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
+}
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const earthRadiusKm = 6371;  // Radius of the Earth in kilometers
@@ -165,38 +197,6 @@ const fetchJobs = async (workerJobTypes, setJobs, userLocation, user) => {
       console.error("Error fetching ads:", error);
     }
   };
-
-  // Function to generate popular job types based on user interactions
-function generatePopularJobTypes() {
-  const userInteractionData = {
-    user1: ["cleaner", "electrician", "painter"],
-    user2: ["plumber", "electrician"],
-    user3: ["cleaner", "plumber", "electrician", "gardener"],
-    // Add more user interactions as needed
-  };
-  
-  const jobTypeCounts = {};
-  
-  for (const user in userInteractionData) {
-    const jobTypes = userInteractionData[user];
-    
-    for (const jobType of jobTypes) {
-      if (jobType in jobTypeCounts) {
-        jobTypeCounts[jobType]++;
-      } else {
-        jobTypeCounts[jobType] = 1;
-      }
-    }
-  }
-
-  // Sort job types by popularity (count)
-  const sortedJobTypes = Object.entries(jobTypeCounts).sort((a, b) => b[1] - a[1]);
-  
-  // Return the top N popular job types (e.g., top 5)
-  const topPopularJobTypes = sortedJobTypes.slice(0, 5).map(([jobType]) => jobType);
-
-  return topPopularJobTypes.filter((value, index) => index == 0 || index == 1);
-}
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {

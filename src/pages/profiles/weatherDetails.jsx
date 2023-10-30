@@ -18,13 +18,6 @@ export function WeatherDetails({ job }) {
           <MDBCol style={{ width: '100%' }}>
             <MDBCard style={{ color: "#4B515D", borderRadius: "35px", border: 'none', width: '100%' }}>
               <MDBCardBody className="p-4" style={{ backgroundColor: 'white', height: '590px', width: '100%', border: 'none' }}>
-                <div className="d-flex"> 
-                  <MDBTypography tag="h6" className="flex-grow-1" style={{ fontSize: '1.5rem' }}>
-                    Colombo
-                  </MDBTypography>
-                  <MDBTypography tag="h6" style={{ fontSize: '1.5rem' }}>15:07</MDBTypography>
-                </div>
-
                 <div className="d-flex flex-column text-center mt-5 mb-4">
                   <MDBTypography
                     tag="h6"
@@ -39,7 +32,7 @@ export function WeatherDetails({ job }) {
                   </span>
                 </div>
 
-                <div className="d-flex align-items-center" style={{ paddingTop: '150px' }}>
+                <div className="d-flex align-items-center" style={{ paddingTop: '200px' }}>
                   <div className="flex-grow-1" style={{ fontSize: '1.5rem' }}>
                     <div>
                       <MDBIcon
@@ -55,15 +48,7 @@ export function WeatherDetails({ job }) {
                         icon="tint fa-fw"
                         style={{ color: "#868B94", fontSize: '2rem' }}
                       />{" "}
-                      <span className="ms-1"> 84% </span>
-                    </div>
-                    <div>
-                      <MDBIcon
-                        fas
-                        icon="sun fa-fw"
-                        style={{ color: "#868B94", fontSize: '2rem' }}
-                      />{" "}
-                      <span className="ms-1"> 0.2h </span>
+                      <span className="ms-1"> {job.forecast.humidity}% </span>
                     </div>
                   </div>
                   <div>

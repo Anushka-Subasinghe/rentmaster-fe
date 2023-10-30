@@ -5,7 +5,7 @@ import ProfileNavbar from './profileNavbar';
 import annyang from 'annyang';
 import moment from 'moment-timezone';
 import { toast } from 'react-toastify';
-import { Widget, addResponseMessage, dropMessages, setQuickButtons, toggleWidget, addUserMessage } from 'react-chat-widget';
+import { Widget, addResponseMessage, dropMessages, setQuickButtons, toggleWidget, addUserMessage, isWidgetOpened } from 'react-chat-widget';
 import 'react-chat-widget/lib/styles.css';
 import { appRoutes } from '@/data';
 const chatBotUrl = config.CHATBOT_URL;
@@ -163,7 +163,11 @@ function ChatPage() {
   // Initialize voice recognition and TTS when the component mounts
   useEffect(() => {
     initVoiceRecognition();
-    toggleWidget();
+    
+    if(!isWidgetOpened()){
+      toggleWidget();
+    }
+    
     return () => {
       annyang.removeCommands();
       annyang.abort();
@@ -171,7 +175,8 @@ function ChatPage() {
   }, []);
 
     useEffect(() => {
-      setQuickButtons(buttons);  
+      setQuickButtons(buttons); 
+      console.log('setButtons'); 
     },[buttons]);
 
     const handleNewUserMessage = (newMessage) => {
@@ -267,7 +272,6 @@ function ChatPage() {
           }
           if (message[0].text == 'Job confirmed') {
             console.log(`Job Confirmed`)
-            setIsChatOpen(false);
             handleSubmit(null, true);
             dropMessages();
             addResponseMessage('Hi. Do you need to request a job?');
@@ -276,10 +280,15 @@ function ChatPage() {
               { label: 'No', value: 'No', buttonClassName: 'custom-quick-button' },
             ]);
           } else if (message[0].text == 'Job cancelled') {
+            localStorage.removeItem('jobType');
+            localStorage.removeItem('date');
+            localStorage.removeItem('buttonType');
             setDate('');
             setJobType(null);
+            navigate(appRoutes.secureRouts.myProfile, {replace: true});
           } else if (message[0].text == 'Goodbye') {
             console.log('Goodbye');
+            navigate(appRoutes.secureRouts.myProfile, {replace: true});
           } else if (message[0].text == 'Please select job type') {
             console.log(`this toggle`);
           }
@@ -308,11 +317,7 @@ function ChatPage() {
 
     const baseUrl = config.API_BASE_URL;  
   return (
-    <div>
-  {/* <div style={{ width: '250px', marginRight: '20px' }}>
-    <ProfileNavbar currentPage='account' />
-  </div> */}
-  
+    <div style={{ margin: 0, padding: 0 }}>
     <Widget
       key={buttons[0].label}
       title="RentMaster Chatbot"
@@ -323,8 +328,8 @@ function ChatPage() {
       loading={false}
       fullScreenMode={true}
     />
-  
-</div>
+  </div>
+    
   );
 }
 
