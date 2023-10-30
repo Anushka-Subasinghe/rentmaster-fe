@@ -4,6 +4,7 @@ import CustomerProfilePage from '@/pages/profiles/customer-profile';
 import WorkerProfilePage from './worker-profile';
 import { appRoutes } from '@/data';
 import ProfileNavbar from './profileNavbar';
+import excavator from "../../assets/excavator.jpg";
 
 export function Profile() {
   const [userDetails, setUserDetails] = useState({});
@@ -49,8 +50,7 @@ export function Profile() {
   return (
  <>
     <div className="absolute inset-0 z-0 h-full w-full"
-    
-  >
+    style={{background: `url(${excavator})`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover'}}>
     <div key={isCustomer ? 1 : 0}>
       <div style={{ marginLeft: '250px' }}>
             <ProfileNavbar currentPage='dashboard' isCustomer={isCustomer} />

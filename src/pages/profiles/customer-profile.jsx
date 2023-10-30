@@ -677,12 +677,12 @@ const CustomerDashboard = ({ userDetails }) => {
   return (
     <div>
       <div>
-        <Typography variant="h3" color="black" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Active Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Active").length === 0 ? (
-          <Typography variant="h4" color="black" className="mb-2">
+          <Typography variant="h4" color="white" className="mb-2">
             No active advertisements to display.
           </Typography>
         ) : (
@@ -731,12 +731,12 @@ const CustomerDashboard = ({ userDetails }) => {
       </div>
   
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="black" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Accepted Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Accepted").length === 0 ? (
-          <Typography variant="h4" color="black" className="mb-2">
+          <Typography variant="h4" color="white" className="mb-2">
             No accepted advertisements to display.
           </Typography>
         ) : (
@@ -803,12 +803,12 @@ const CustomerDashboard = ({ userDetails }) => {
       </div>
 
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="black" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Completed Advertisements:
         </Typography>
   
         {advertisements.filter((advertisement) => advertisement.status === "Completed").length === 0 ? (
-          <Typography variant="h4" color="black" className="mb-2">
+          <Typography variant="h4" color="white" className="mb-2">
             No completed advertisements to display.
           </Typography>
         ) : (

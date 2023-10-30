@@ -16,6 +16,7 @@ import EditProfile from "./pages/profiles/edit-profile";
 import Recommendations from "./pages/profiles/recommendations";
 import Calendar from "./pages/profiles/calendar";
 import ChatPage from "./pages/profiles/chatPage";
+import BidPage from "./pages/profiles/bidPage";
 
 export const routes = [
   {
@@ -85,6 +86,12 @@ export const profileRouts = [
     name: "Chatbot",
     path: appRoutes.secureRouts.chatbot,
     element: <ChatPage />,
+  },
+  {
+    icon: ArrowRightOnRectangleIcon,
+    name: "Bid",
+    path: appRoutes.secureRouts.bid,
+    element: <BidPage />,
   }
 ];
 

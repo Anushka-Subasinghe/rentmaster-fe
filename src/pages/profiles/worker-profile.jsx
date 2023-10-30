@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardBody,
@@ -8,12 +9,17 @@ import {
 } from "@material-tailwind/react";
 import config from "@/config";
 import badWeather from '../../assets/badWeather.jpg';
+import { appRoutes } from "@/data";
 
 const JobCard = ({job, handleJob, cancelJob, finishJob, userDetails}) => {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
+  const navigate = useNavigate();
+
   const handleAcceptJob = (job) => {
+    console.log(`handleAcceptJob`, job);
+    navigate(appRoutes.secureRouts.bid, { state: { userDetails, job } });
     setSelectedJob(job);
     setIsPopupVisible(true);
   };
@@ -385,22 +391,22 @@ function WorkerProfilePage({ userDetails }) {
   return (
     <div className="container mx-auto p-4">
       <div className="pt-10">
-        <Typography variant="h3" color="black" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Active Jobs
         </Typography>
         {jobs.filter((job) => job.status === "Active").length === 0 || !jobs.some(job => job.selectedWorkers.some((worker) => worker.worker_id == userDetails.id)) ? (
-          <Typography variant="h4" color="black" className="mb-2">
+          <Typography variant="h4" color="white" className="mb-2">
             No active jobs to display.
           </Typography>
         ) : <ul>{renderJobs("Active")}</ul>}
       </div>
 
       <div style={{ marginTop: "100px" }}>
-        <Typography variant="h3" color="black" className="mb-2">
+        <Typography variant="h3" color="white" className="mb-2">
           Accepted Jobs
         </Typography>
         {jobs.filter((job) => job.status === "Accepted").length === 0 || !jobs.filter((job) => job.status === "Accepted").some((job) => job.worker_id == userDetails.id) ? (
-          <Typography variant="h4" color="black" className="mb-2">
+          <Typography variant="h4" color="white" className="mb-2">
             No accepted jobs to display.
           </Typography>
         ) : <ul>{renderJobs("Accepted")}</ul>}

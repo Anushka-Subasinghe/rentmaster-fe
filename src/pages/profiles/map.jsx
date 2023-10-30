@@ -1,16 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Flex } from '@chakra-ui/react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Flex,
+  HStack,
+  IconButton,
+  Input,
+  Text,
+} from '@chakra-ui/react'
+import { FaLocationArrow, FaTimes } from 'react-icons/fa'
+
 import {
   useJsApiLoader,
   GoogleMap,
   MarkerF,
-  InfoWindowF
-} from '@react-google-maps/api';
+  InfoWindowF,
+  Autocomplete,
+  DirectionsRenderer,
+} from '@react-google-maps/api'
 
-export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs }) {
+export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs, recommendedWorkers = null, searched, setSearched }) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyC50LlCo2A_CLcqgKASEK_WPjKKDZf8yNM",
+    libraries: ['places'],
   });
+
+  console.log('workers inside map', recommendedWorkers);
 
   const center = {
     lat: location.latitude,
@@ -20,6 +36,10 @@ export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs 
   const [map, setMap] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [markers, setMarkers] = useState([]);
+  const [directionsResponse, setDirectionsResponse] = useState(null);
+
+  /** @type React.MutableRefObject<HTMLInputElement> */
+  const originRef = useRef()
 
   useEffect(() => {
     // Fetch and set markers in the state
@@ -71,12 +91,49 @@ export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs 
   return (
     <Flex
       position="relative"
-      flexDirection="row"
+      flexDirection="column"
       alignItems="center"
       marginTop='100px'
       h="100vh"
       w="100vw"
     >
+      <Box
+        position="absolute" left={1070} top={650} style={{ borderRadius: '10px' }}
+        p={12}
+        borderRadius='lg'
+        m={4}
+        bgColor='white'
+        shadow='base'
+        minW='container.md'
+        zIndex='1'
+      >
+        <HStack spacing={2} justifyContent='space-between'>
+          <Box flexGrow={1}>
+            <Autocomplete>
+              <Input type='text' placeholder='Location' ref={originRef} />
+            </Autocomplete>
+            <ButtonGroup>
+            <Button colorScheme='pink' type='submit' onClick={() => {
+              setSearched(true);
+              originRef.current.value = '';
+            }}>
+              Search
+            </Button>
+          </ButtonGroup>
+          </Box>
+        </HStack>
+        <HStack spacing={4} mt={4} justifyContent='center' alignItems='center'>
+          <IconButton
+            aria-label='center back'
+            icon={<FaLocationArrow />}
+            isRound
+            onClick={() => {
+              map.panTo(center)
+              map.setZoom(15)
+            }}
+          />
+        </HStack>
+      </Box>
       <Box position="absolute" left={800} top={0} h="70%" w="40%" style={{ borderRadius: '30px' }}>
         {/* Google Map Box */}
         <GoogleMap key={`${location.latitude}`}
@@ -91,6 +148,13 @@ export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs 
           }}
           onLoad={map => setMap(map)}
         >
+          {(searched && recommendedWorkers) && recommendedWorkers.map((worker, index) => (
+              <MarkerF
+                key={index}
+                position={{ lat: worker.location[0], lng: worker.location[1] }}
+                icon={"http://maps.google.com/mapfiles/ms/icons/blue-dot.png"}
+              />
+          ))}
           {markers.map((marker, index) => (
             <MarkerF
               key={index}
@@ -99,6 +163,9 @@ export function SimpleMap({ location, popularAreas, popularJobTypes, user, jobs 
               icon={index !== 0 && (marker.type == "popular" ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" : "http://maps.google.com/mapfiles/ms/icons/blue-dot.png")}
             />
           ))}
+          {directionsResponse && (
+            <DirectionsRenderer directions={directionsResponse} />
+          )}
 
           {selectedMarker && (
             <InfoWindowF

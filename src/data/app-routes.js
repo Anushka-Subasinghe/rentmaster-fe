@@ -25,7 +25,8 @@ export const appRoutes = {
       inbox: "/inbox",
       logout: "/home",
       recommendations: "/recommendations",
-      calendar: "/calendar"
+      calendar: "/calendar",
+      bid: "/bid"
     },
     viewProfileRouts: {
       serviceProviderView: "/service-provider-profile",

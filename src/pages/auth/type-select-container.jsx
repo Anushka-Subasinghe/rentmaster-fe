@@ -5,6 +5,7 @@ import config from "@/config";
 import { toast, ToastContainer } from "react-toastify";
 import { appRoutes } from "@/data";
 import { NavbarSimple } from "../public/homeNavbar";
+import electrician from "../../assets/electrician.jpg";
 
 export function TypeSelectPage() {
   const [name, setName] = useState("");
@@ -93,11 +94,11 @@ export function TypeSelectPage() {
   const navigate = useNavigate();
   return (
     <>
-      <div className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, backgroundColor: `ghostwhite`, backgroundSize: "cover", height: "100vh", overflow: 'auto', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}/>
+      <div className="absolute inset-0 z-0 h-full w-full" style={{ margin: 0, background: `url(${electrician})`, backgroundRepeat: 'no-repeat', backgroundSize: 'cover', height: "100vh", overflow: 'auto', justifyContent: 'center', alignItems: 'center', display: 'flex', flexDirection: 'column' }}/>
       <div style={{ marginLeft: '250px' }}>
             <NavbarSimple currentPage='signUp' />
           </div> 
-        <form className="bg-gray-700 opacity-75 mt-20 pb-4 pt-4 mb-10" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: '700px', marginLeft: '550px', borderRadius: '20px'}}>
+        <form className="bg-gray-700 opacity-90 mt-20 pb-4 pt-4 mb-10" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: '700px', marginLeft: '550px', borderRadius: '20px'}}>
           <div className="mb-4">
             <div style={{display: "flex", alignItems: "center", justifyContent: "center"}}>
               <label className="block text-blue-300 py-2 font-bold mb-2" htmlFor="emailaddress">

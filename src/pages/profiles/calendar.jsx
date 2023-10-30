@@ -64,7 +64,7 @@ export function Calendar() {
   return (
     <>
     <div style={{ marginLeft: '250px' }}>
-            <ProfileNavbar currentPage='calendar' />
+            <ProfileNavbar currentPage='calendar' isCustomer={userDetails ? userDetails.user_type == 'customer' : false} />
             </div>
     <div>
       <Fullcalendar
